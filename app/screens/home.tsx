@@ -4,6 +4,7 @@ import { Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 
 import { ParamsList } from "..";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -17,6 +18,7 @@ export default function Home() {
         container: {
             paddingTop: insets.top,
             backgroundColor: 'skyblue',
+            flex: 1,
         }
     })
     return (
@@ -49,13 +51,19 @@ function TopSection() {
 }
 
 function MainBody() {
+    const navigation = useNavigation<NativeStackNavigatorTypes>();
     const mainBodyStyles = StyleSheet.create({
         container: {
             flex: 1,
             backgroundColor: 'whitesmoke',
             borderTopLeftRadius: 15,
             borderTopRightRadius: 15,
-            paddingTop: 10,
+            paddingTop: 15,
+            shadowColor: "black",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.2, // subtler shadow
+            shadowRadius: 2,
+            elevation: 2, // for Android shadow
         },
         tripContainer: {
             flexDirection: 'row',
@@ -72,11 +80,16 @@ function MainBody() {
             fontWeight: 'bold'
         },
     })
+
+    function pressAddTrip() {
+        navigation.navigate('AddTrip', {name: 'AddTrip'});
+    }
+
     return (
         <View style={mainBodyStyles.container}>
             <View style={mainBodyStyles.tripContainer}>
-                <Text style={mainBodyStyles.titleText}>Your Trips</Text>
-                <TouchableOpacity>
+                <Text style={mainBodyStyles.titleText}>Trips</Text>
+                <TouchableOpacity onPress={pressAddTrip}>
                     <Ionicons name='add-outline' size={30} color='black'/>
                 </TouchableOpacity>
             </View>
