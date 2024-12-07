@@ -5,8 +5,11 @@ class Trip {
     private startDate: Date;
     private endDate: Date;
 
-    interface constructorProps {
-        
+    public constructor(tripName: string, location: string, start: Date, end: Date) {
+        this.tripName = tripName;
+        this.location = location;
+        this.startDate = start;
+        this.endDate = end;
+        this.people = [new Person('', 1)];
     }
-    public constructor()
 }
