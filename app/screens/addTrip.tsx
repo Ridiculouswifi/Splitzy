@@ -9,6 +9,7 @@ import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { DatePickerModal } from "react-native-paper-dates";
 import { CalendarDate } from "react-native-paper-dates/lib/typescript/Date/Calendar";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { GenericButton, GenericButton2 } from "@/components/buttons";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -98,6 +99,8 @@ function MainBody() {
         },
     })
 
+    function dummy() {}
+
     return (
         <View style={mainBodyStyles.container}>
             <Details 
@@ -105,10 +108,29 @@ function MainBody() {
                 setLocation={setLocation}
                 setStartDate={setStartDate}
                 setEndDate={setEndDate}/>
+
             <VerticalGap height={20}/>
             <Divider/>
             <VerticalGap height={20}/>
+
             <DisplayMembers/>
+
+            <VerticalGap height={20}/>
+            <Divider/>
+            <VerticalGap height={20}/>
+
+            <DisplayCurrencies/>
+
+            <VerticalGap height={20}/>
+            <Divider/>
+            <VerticalGap height={20}/>
+
+            <GenericButton2 
+                text="Confirm" 
+                height={45} 
+                width={210} 
+                colour="dodgerblue" 
+                action={dummy}/>
         </View>
     )
 }
@@ -231,35 +253,16 @@ function DisplayMembers() {
             width: 0.8 * windowWidth,
             alignItems: 'center',
         },
-        addMemberButton: {
-            width: 55,
-            height: 35,
-            backgroundColor: 'lime',
-            borderRadius: 5,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: {width: 0, height: 1},
-            shadowOpacity: 0.2,
-            shadowRadius: 2,
-            elevation: 2,
-        },
-        addMemberText: {
-            fontSize: 16,
-            fontWeight: 'bold',
-        },
     })
+
+    function dummy() {}
 
     return (
         <View style={membersStyles.container}>
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Members</Text>
                 <HorizontalGap width={15}/>
-                <TouchableOpacity 
-                    style={membersStyles.addMemberButton}
-                    activeOpacity={0.50}>
-                    <Text style={membersStyles.addMemberText}>Add</Text>
-                </TouchableOpacity>
+                <GenericButton text="Add" height={35} width={55} colour="lime" action={dummy}/>
             </View>
             <VerticalGap height={10}/>
         </View>
@@ -270,6 +273,36 @@ function Member() {
     return (
         <View>
             <Text>Member</Text>
+        </View>
+    )
+}
+
+function DisplayCurrencies() {
+    const membersStyles = StyleSheet.create({
+        container: {
+            alignItems: 'center',
+        },
+        title: {
+            fontSize: 18,
+            fontWeight: 'bold',
+        },
+        miniContainer: {
+            flexDirection: 'row',
+            width: 0.8 * windowWidth,
+            alignItems: 'center',
+        },
+    })
+
+    function dummy() {}
+
+    return (
+        <View style={membersStyles.container}>
+            <View style={membersStyles.miniContainer}>
+                <Text style={membersStyles.title}>Currencies</Text>
+                <HorizontalGap width={15}/>
+                <GenericButton text="Add" height={35} width={55} colour="lime" action={dummy}/>
+            </View>
+            <VerticalGap height={10}/>
         </View>
     )
 }

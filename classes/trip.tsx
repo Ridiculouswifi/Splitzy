@@ -1,5 +1,6 @@
 class Trip {
     private people: Person[];
+    private currencies: string[];
     private tripName: string;
     private location: string;
     private startDate: Date;
@@ -11,5 +12,6 @@ class Trip {
         this.startDate = start;
         this.endDate = end;
         this.people = [new Person('', 1)];
+        this.currencies = ["SGD"];
     }
 }
