@@ -59,7 +59,7 @@ function MainBody() {
             borderTopLeftRadius: 15,
             borderTopRightRadius: 15,
             paddingTop: 15,
-            shadowColor: "black",
+            shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.2, // subtler shadow
             shadowRadius: 2,

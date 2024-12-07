@@ -11,3 +11,9 @@ export function VerticalGap({height}: {height: number}) {
         <View style={[verticalGapStyle.container, {height: height}]}></View>
     )
 }
+
+export function HorizontalGap({width}: {width: number}) {
+    return (
+        <View style={[verticalGapStyle.container, {width: width}]}></View>
+    )
+}
