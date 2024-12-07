@@ -1,19 +1,32 @@
 import React from "react"
-import { StyleSheet, View } from "react-native"
+import { Dimensions, StyleSheet, View } from "react-native"
 
-const verticalGapStyle = StyleSheet.create({
+const windowWidth = Dimensions.get('window').width;
+
+const gapStyles = StyleSheet.create({
     container: {
+    },
+    divider: {
+        borderBottomWidth: 2,
+        borderColor: 'lightgrey',
+        width: 0.9 * windowWidth,
     }
 })
 
 export function VerticalGap({height}: {height: number}) {
     return (
-        <View style={[verticalGapStyle.container, {height: height}]}></View>
+        <View style={[gapStyles.container, {height: height}]}></View>
     )
 }
 
 export function HorizontalGap({width}: {width: number}) {
     return (
-        <View style={[verticalGapStyle.container, {width: width}]}></View>
+        <View style={[gapStyles.container, {width: width}]}></View>
+    )
+}
+
+export function Divider() {
+    return (
+        <View style={gapStyles.divider}></View>
     )
 }

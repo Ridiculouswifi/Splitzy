@@ -1,11 +1,14 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import { Dimensions, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Dimensions, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { ParamsList } from "..";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { HorizontalGap, VerticalGap } from "@/components/gap";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
+import { DatePickerModal } from "react-native-paper-dates";
+import { CalendarDate } from "react-native-paper-dates/lib/typescript/Date/Calendar";
+import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -24,7 +27,7 @@ export default function AddTrip() {
     })
     return (
         <View style={tripStyles.container}>
-            <StatusBar barStyle={"dark-content"}/>
+            <StatusBar barStyle={'dark-content'}/>
             <TopSection/>
             <MainBody/>
         </View>
@@ -73,6 +76,12 @@ function TopSection() {
 
 function MainBody() {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+
+    const [tripName, setTripName] = useState('');
+    const [location, setLocation] = useState('');
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+
     const mainBodyStyles = StyleSheet.create({
         container: {
             flex: 1,
@@ -85,27 +94,42 @@ function MainBody() {
             shadowOpacity: 0.2, // subtler shadow
             shadowRadius: 2,
             elevation: 2, // for Android shadow
+            alignItems: 'center',
         },
     })
 
     return (
         <View style={mainBodyStyles.container}>
-            <Details/>
+            <Details 
+                setTripName={setTripName}
+                setLocation={setLocation}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}/>
+            <VerticalGap height={20}/>
+            <Divider/>
+            <VerticalGap height={20}/>
+            <DisplayMembers/>
         </View>
     )
 }
 
-function Details() {
-    const [tripName, setTripName] = useState('');
-    const [location, setLocation] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+interface detailsProps {
+    setTripName: (variable: string) => void;
+    setLocation: (variable: string) => void;
+    setStartDate: (variable: Date) => void;
+    setEndDate: (variable: Date) => void;
+}
 
+function Details({setTripName, setLocation, setStartDate, setEndDate}: detailsProps) {
     const detailsStyle = StyleSheet.create({
         container: {
             alignItems: "center",
-            flex: 1,
             paddingTop: 10,
+        },
+        title: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            alignSelf: 'flex-start',
         },
         miniContainer: {
             flexDirection: 'row',
@@ -115,6 +139,8 @@ function Details() {
     })
     return (
         <View style={detailsStyle.container}>
+            <Text style={detailsStyle.title}>Details</Text>
+            <VerticalGap height={20}/>
             <Input setVariable={setTripName} variablePlaceHolder="Trip Name"/>
             <VerticalGap height={20}/>
             <Input setVariable={setLocation} variablePlaceHolder="Location"/>
@@ -123,8 +149,6 @@ function Details() {
                 <InputMini setVariable={setStartDate} variablePlaceHolder="Start"/>
                 <InputMini setVariable={setEndDate} variablePlaceHolder="End"/>
             </View>
-            <VerticalGap height={20}/>
-            <DisplayMembers/>
         </View>
     )
 }
@@ -154,30 +178,49 @@ function Input({ setVariable, variablePlaceHolder }: InputProps) {
     )
 }
 
-function InputMini({ setVariable, variablePlaceHolder }: InputProps) {
+interface InputMiniProps {
+    setVariable: (variable: Date) => void;
+    variablePlaceHolder: string;
+}
+
+function InputMini({ setVariable, variablePlaceHolder }: InputMiniProps) {
+    const [date, setDate] = useState(new Date());
+    
     const inputMiniStyles = StyleSheet.create({
         inputField: {
             width: 0.35 * windowWidth,
-            borderBottomWidth: 2,
-            borderColor: 'grey',
             color: 'black',
             fontSize: 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
+        inputTitle: {
+            fontSize: 15,
+            fontWeight: '500',
         }
     })
-    
+
+    function setAfterDateChange(event: DateTimePickerEvent, date?: Date | undefined) {
+        if (event.type == "set") {
+            setVariable(date ?? new Date());
+        }
+    }
+
     return (
-        <TextInput 
-            placeholder={variablePlaceHolder}
-            placeholderTextColor="grey"
-            style={inputMiniStyles.inputField}
-            onChangeText={setVariable}/>
+        <View style={inputMiniStyles.inputField}>
+            <Text style={inputMiniStyles.inputTitle}>{variablePlaceHolder}</Text>
+            <RNDateTimePicker 
+                value={date}
+                onChange={setAfterDateChange}
+                />
+        </View>
     )
 }
 
 function DisplayMembers() {
     const membersStyles = StyleSheet.create({
         container: {
-            width: 0.8 * windowWidth,
+            alignItems: 'center',
         },
         title: {
             fontSize: 18,
