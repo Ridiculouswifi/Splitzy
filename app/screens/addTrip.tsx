@@ -103,6 +103,7 @@ function MainBody() {
     async function confirmDetails() {
         await addToTrips(db, tripName, location, startDate, endDate);
         console.log("Confirmed");
+        console.log(tripName, location, startDate.toLocaleDateString(), endDate.toLocaleDateString());
     }
 
     return (

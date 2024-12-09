@@ -115,11 +115,11 @@ const tripStyles = StyleSheet.create({
 })
 function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>}) {
     const db = useSQLiteContext();
-    const { id, tripName, location, startDate, endDate } = item;
+    const { id, trip_name, location, start_date, end_date } = item;
     
     return (
         <View style={tripStyles.container}>
-            <Text style={tripStyles.tripName}>{id}</Text>
+            <Text style={tripStyles.tripName}>{trip_name}</Text>
             <Text style={tripStyles.tripName}>Name</Text>
             <VerticalGap height={15}/>
             <TouchableOpacity onPress={() => deleteItem && deleteItem(id)}>
@@ -131,10 +131,10 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
 
 interface ItemEntity {
     id: number
-    tripName: string,
+    trip_name: string,
     location: string,
-    startDate: string,
-    endDate: string,   
+    start_date: string,
+    end_date: string,   
 }
 function DisplayTrips() {
     const db = useSQLiteContext();
