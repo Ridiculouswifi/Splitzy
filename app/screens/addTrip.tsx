@@ -135,7 +135,8 @@ function MainBody() {
                 height={45} 
                 width={210} 
                 colour="dodgerblue" 
-                action={confirmDetails}/>
+                action={confirmDetails}
+                fontsize={22}/>
         </View>
     )
 }

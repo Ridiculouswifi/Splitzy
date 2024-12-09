@@ -1,13 +1,14 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useCallback, useEffect, useState } from "react";
-import { Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ParamsList } from "..";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { VerticalGap } from "@/components/gap";
+import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { deleteTrip } from "@/database/databaseSqlite";
+import { GenericButton2 } from "@/components/buttons";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -104,28 +105,67 @@ function MainBody() {
 
 const tripStyles = StyleSheet.create({
     container: {
-        height: 100,
-        width: windowWidth,
-        borderWidth: 2,
+        height: 120,
+        width: 0.95 * windowWidth,
+        borderRadius: 10,
+        paddingHorizontal: 20, 
+        paddingVertical: 10,
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowColor: '#000',
+        borderWidth: 0.1,
+        backgroundColor: 'whitesmoke',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    textContainer: {
+        width: 0.64 * windowWidth
     },
     tripName: {
-        color: 'black',
         fontSize: 25,
+        fontWeight: '600',
     },
+    location: {
+        fontSize: 17,
+    },
+    date: {
+        fontSize: 15,
+    }
 })
 function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>}) {
     const db = useSQLiteContext();
     const { id, trip_name, location, start_date, end_date } = item;
     
+    function editTrip() {
+
+    }
+
     return (
-        <View style={tripStyles.container}>
-            <Text style={tripStyles.tripName}>{trip_name}</Text>
-            <Text style={tripStyles.tripName}>Name</Text>
-            <VerticalGap height={15}/>
-            <TouchableOpacity onPress={() => deleteItem && deleteItem(id)}>
-                <Text>Delete</Text>
-            </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={tripStyles.container} activeOpacity={0.4}>
+            <View style={tripStyles.textContainer}>
+                <Text style={tripStyles.tripName} numberOfLines={1} ellipsizeMode="tail">{trip_name}</Text>
+                <VerticalGap height={5}/>
+                <Text style={tripStyles.location} numberOfLines={1} ellipsizeMode="tail">{location}</Text>
+                <VerticalGap height={15}/>
+                <Text style={tripStyles.date}>{start_date} - {end_date}</Text>
+                <VerticalGap height={15}/>
+            </View>
+            <View>
+            <View style={{flexDirection: 'row'}}>
+                <TouchableOpacity>
+                    <GenericButton2 
+                        text="Edit" colour="dodgerblue" 
+                        height={30} width={45} 
+                        action={editTrip} fontsize={14}/>
+                </TouchableOpacity>
+                <HorizontalGap width={8}/>
+                <TouchableOpacity onPress={() => deleteItem && deleteItem(id)}>
+                    <Ionicons name="trash-outline" size={28} color="red"/>
+                </TouchableOpacity>
+            </View>
+            </View>
+        </TouchableOpacity>
     )
 }
 
@@ -136,6 +176,14 @@ interface ItemEntity {
     start_date: string,
     end_date: string,   
 }
+const displayTripsStyles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    internalContainer: {
+        alignItems: 'center'
+    }
+})
 function DisplayTrips() {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
@@ -171,10 +219,16 @@ function DisplayTrips() {
     }
 
     return (
-        <View>
+        <ScrollView style={displayTripsStyles.container}>
+            <View style={displayTripsStyles.internalContainer}>
             {trips.map((item) => (
-                <Trip key={item.id} item={item} deleteItem={deleteItem}/>
+                <View>
+                    <VerticalGap height={10}/>
+                    <Trip key={item.id} item={item} deleteItem={deleteItem}/>
+                </View>
             ))}
-        </View>
+            <VerticalGap height={40}/>
+            </View>
+        </ScrollView>
     )
 }
