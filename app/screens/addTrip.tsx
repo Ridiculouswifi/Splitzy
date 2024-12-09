@@ -6,10 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import { DatePickerModal } from "react-native-paper-dates";
-import { CalendarDate } from "react-native-paper-dates/lib/typescript/Date/Calendar";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { GenericButton, GenericButton2 } from "@/components/buttons";
+import { addToTrips } from "@/database/databaseSqlite";
+import { useSQLiteContext } from "expo-sqlite";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -77,6 +77,7 @@ function TopSection() {
 
 function MainBody() {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+    const db = useSQLiteContext();
 
     const [tripName, setTripName] = useState('');
     const [location, setLocation] = useState('');
@@ -99,7 +100,10 @@ function MainBody() {
         },
     })
 
-    function dummy() {}
+    async function confirmDetails() {
+        await addToTrips(db, tripName, location, startDate, endDate);
+        console.log("Confirmed");
+    }
 
     return (
         <View style={mainBodyStyles.container}>
@@ -130,7 +134,7 @@ function MainBody() {
                 height={45} 
                 width={210} 
                 colour="dodgerblue" 
-                action={dummy}/>
+                action={confirmDetails}/>
         </View>
     )
 }
