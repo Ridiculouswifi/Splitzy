@@ -31,3 +31,7 @@ export async function addToTrips(db: SQLiteDatabase,
         `, tripName, location, startDate.toLocaleDateString(), endDate.toLocaleDateString())
         .then(console.log);
 }
+
+export async function deleteTrip(db: SQLiteDatabase, id: number): Promise<void> {
+    await db.runAsync(`DELETE FROM trips WHERE id = ?;`, id);
+}

@@ -1,10 +1,13 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ParamsList } from "..";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
+import { VerticalGap } from "@/components/gap";
+import { deleteTrip } from "@/database/databaseSqlite";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -93,6 +96,78 @@ function MainBody() {
                     <Ionicons name='add-outline' size={30} color='black'/>
                 </TouchableOpacity>
             </View>
+            <DisplayTrips/>
+        </View>
+    )
+}
+
+
+const tripStyles = StyleSheet.create({
+    container: {
+        height: 100,
+        width: windowWidth,
+        borderWidth: 2,
+    },
+    tripName: {
+        color: 'black',
+        fontSize: 25,
+    },
+})
+function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>}) {
+    const db = useSQLiteContext();
+    const { id, tripName, location, startDate, endDate } = item;
+    
+    return (
+        <View style={tripStyles.container}>
+            <Text style={tripStyles.tripName}>{id}</Text>
+            <Text style={tripStyles.tripName}>Name</Text>
+            <VerticalGap height={15}/>
+            <TouchableOpacity onPress={() => deleteItem && deleteItem(id)}>
+                <Text>Delete</Text>
+            </TouchableOpacity>
+        </View>
+    )
+}
+
+interface ItemEntity {
+    id: number
+    tripName: string,
+    location: string,
+    startDate: string,
+    endDate: string,   
+}
+function DisplayTrips() {
+    const db = useSQLiteContext();
+    const [trips, setTrips] = useState<ItemEntity[]>([]);
+
+    const refetchItems = useCallback(() => {
+        async function refetch(){
+            await db.withExclusiveTransactionAsync(async () => {
+                setTrips(
+                    await db.getAllAsync<ItemEntity>(
+                        `SELECT * FROM trips`
+                    )
+                );
+            });
+        }
+        refetch();
+    }, [db])
+
+    useEffect(() => {
+        refetchItems();
+    }, []);
+
+    async function deleteItem(id: number) {
+        console.log("Deleting:", id);
+        await deleteTrip(db, id);
+        await refetchItems();
+    }
+
+    return (
+        <View>
+            {trips.map((item) => (
+                <Trip key={item.id} item={item} deleteItem={deleteItem}/>
+            ))}
         </View>
     )
 }
