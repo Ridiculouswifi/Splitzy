@@ -138,24 +138,31 @@ interface ItemEntity {
 }
 function DisplayTrips() {
     const db = useSQLiteContext();
+    const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [trips, setTrips] = useState<ItemEntity[]>([]);
 
+    async function refetch(){
+        await db.withExclusiveTransactionAsync(async () => {
+            setTrips(
+                await db.getAllAsync<ItemEntity>(
+                    `SELECT * FROM trips`
+                )
+            );
+        });
+    }
+
     const refetchItems = useCallback(() => {
-        async function refetch(){
-            await db.withExclusiveTransactionAsync(async () => {
-                setTrips(
-                    await db.getAllAsync<ItemEntity>(
-                        `SELECT * FROM trips`
-                    )
-                );
-            });
-        }
         refetch();
     }, [db])
 
     useEffect(() => {
         refetchItems();
-    }, []);
+
+        const unsubscribe = navigation.addListener('focus', () => {
+            refetchItems();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     async function deleteItem(id: number) {
         console.log("Deleting:", id);
