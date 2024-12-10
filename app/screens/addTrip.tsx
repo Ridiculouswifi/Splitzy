@@ -12,6 +12,7 @@ import { addToTrips } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { Person } from "../../classes/person";
 import { Currency } from "@/classes/currency";
+import { TopSection } from "@/components/screenTitle";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -31,48 +32,8 @@ export default function AddTrip() {
     return (
         <View style={tripStyles.container}>
             <StatusBar barStyle={'dark-content'}/>
-            <TopSection/>
+            <TopSection title="Add Trip"/>
             <MainBody/>
-        </View>
-    )
-}
-
-function TopSection() {
-    const navigation = useNavigation<NativeStackNavigatorTypes>();
-    const topSectionStyles = StyleSheet.create({
-        container: {
-            paddingHorizontal: 40,
-            backgroundColor: 'skyblue',
-            height: 0.09 * windowHeight,
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-        horizontalContainer: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            width: windowWidth,
-            justifyContent: 'space-between',
-            paddingHorizontal: 10,
-        },
-        titleMessage: {
-            fontSize: 35 / windowFontScale,
-            fontWeight: 'bold',
-        },
-    })
-    
-    function returnHome() {
-        navigation.pop();
-    }
-
-    return (
-        <View style={topSectionStyles.container}>
-            <View style={topSectionStyles.horizontalContainer}>
-                <TouchableOpacity onPress={returnHome}>
-                    <Ionicons name="chevron-back-outline" size={35}/>
-                </TouchableOpacity>
-                <Text style={topSectionStyles.titleMessage}>Add Trip</Text>
-                <View style={{width: 35}}></View>
-            </View>
         </View>
     )
 }
