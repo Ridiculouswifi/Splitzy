@@ -12,7 +12,7 @@ import { addToTrips } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { Person } from "../../classes/person";
 import { Currency } from "@/classes/currency";
-import { TopSection } from "@/components/screenTitle";
+import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -93,28 +93,6 @@ function MainBody() {
         setCurrencies(newCurrencies);
     }
 
-    const mainBodyStyles = StyleSheet.create({
-        container: {
-            flex: 1,
-            backgroundColor: 'whitesmoke',
-            alignItems: 'center',
-            width: windowWidth - 30,
-            paddingTop: 15,
-        },
-        outerContainer: {
-            flex: 1,
-            backgroundColor: 'whitesmoke',
-            borderTopLeftRadius: 15,
-            borderTopRightRadius: 15,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2, // subtler shadow
-            shadowRadius: 2,
-            elevation: 2, // for Android shadow
-            alignItems: 'center',
-        },
-    })
-
     async function confirmDetails() {
         await addToTrips(db, tripName, location, startDate, endDate);
         console.log("Confirmed");
@@ -123,9 +101,9 @@ function MainBody() {
     }
 
     return (
-        <View style={mainBodyStyles.outerContainer}>
+        <View style={genericMainBodyStyles.outerContainer}>
         <ScrollView>
-        <View style={mainBodyStyles.container}>
+        <View style={genericMainBodyStyles.container}>
             <Details 
                 setTripName={setTripName}
                 setLocation={setLocation}
