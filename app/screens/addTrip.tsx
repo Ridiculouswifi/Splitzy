@@ -104,6 +104,7 @@ function MainBody() {
         await addToTrips(db, tripName, location, startDate, endDate);
         console.log("Confirmed");
         console.log(tripName, location, startDate.toLocaleDateString(), endDate.toLocaleDateString());
+        navigation.goBack();
     }
 
     return (
