@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
-import { deleteTrip } from "@/database/databaseSqlite";
+import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
 import { GenericButton2 } from "@/components/buttons";
 import { ConfirmDelete } from "@/components/confirmDelete";
 
@@ -236,6 +236,9 @@ function DisplayTrips() {
     async function deleteItem(id: number) {
         console.log("Deleting:", id);
         await deleteTrip(db, id);
+        await deleteRelatedPeople(db, id);
+        await deleteRelatedCurrencies(db, id);
+
         await refetchItems();
     }
 

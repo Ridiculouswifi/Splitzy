@@ -66,6 +66,10 @@ export async function deletePerson(db: SQLiteDatabase, id: number): Promise<void
     await db.runAsync(`DELETE FROM people WHERE id = ?;`, id);
 }
 
+export async function deleteRelatedPeople(db: SQLiteDatabase, tripId: number): Promise<void> {
+    await db.runAsync(`DELETE FROM people WHERE trip_id = ?`, tripId);
+}
+
 export async function getRelatedPeople(db: SQLiteDatabase, tripId: number) : Promise<unknown[]> {
     return await db.getAllAsync(`
         SELECT * FROM people
@@ -84,6 +88,10 @@ export async function addToCurrencies(db: SQLiteDatabase, currencyName: string,
 
 export async function deleteCurrency(db: SQLiteDatabase, id: number): Promise<void> {
     await db.runAsync(`DELETE FROM people WHERE id = ?;`, id);
+}
+
+export async function deleteRelatedCurrencies(db: SQLiteDatabase, tripId: number): Promise<void> {
+    await db.runAsync(`DELETE FROM currencies WHERE trip_id = ?`, tripId);
 }
 
 export async function getRelatedCurrencies(db: SQLiteDatabase, tripId: number): Promise<unknown[]> {
