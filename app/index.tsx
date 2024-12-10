@@ -14,9 +14,9 @@ import * as DB from "../database/databaseSqlite";
 const Stack = createNativeStackNavigator<ParamsList>();
 
 export type ParamsList = {
-    Home: {name: string}
-    Trip: {name: string}
-    AddTrip: {name: string}
+    Home: undefined;
+    Trip: { tripName: string }
+    AddTrip: undefined;
 }
 
 export default function Index() {

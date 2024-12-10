@@ -87,7 +87,7 @@ function MainBody() {
     })
 
     function pressAddTrip() {
-        navigation.navigate('AddTrip', {name: 'AddTrip'});
+        navigation.navigate('AddTrip');
     }
 
     return (
@@ -139,6 +139,8 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
     const { id, trip_name, location, start_date, end_date } = item;
     const [isVisible, setIsVisible] = useState(false);
 
+    const navigation = useNavigation<NativeStackNavigatorTypes>();
+
     function editTrip() {
 
     }
@@ -151,10 +153,15 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
         deleteItem && deleteItem(id);
     }
 
+    function goToTrip() {
+        navigation.navigate('Trip', { tripName: trip_name });
+    }
+
     return (
         <View>
             <VerticalGap key={item.id} height={10}/>
-            <TouchableOpacity style={tripStyles.container} activeOpacity={0.4}>
+            <TouchableOpacity style={tripStyles.container} activeOpacity={0.4}
+                onPress={goToTrip}>
                 <View style={tripStyles.textContainer}>
                     <Text style={tripStyles.tripName} numberOfLines={1} ellipsizeMode="tail">{trip_name}</Text>
                     <VerticalGap height={5}/>
