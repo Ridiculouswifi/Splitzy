@@ -1,4 +1,4 @@
-class Person {
+export class Person {
     private name: string;
     private weight: number;
 

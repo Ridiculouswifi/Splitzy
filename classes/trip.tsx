@@ -1,3 +1,5 @@
+import { Person } from "./person";
+
 class Trip {
     private people: Person[];
     private currencies: string[];

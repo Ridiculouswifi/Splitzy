@@ -1,15 +1,18 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import { Dimensions, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Dimensions, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { ParamsList } from "..";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import { DatePickerModal } from "react-native-paper-dates";
-import { CalendarDate } from "react-native-paper-dates/lib/typescript/Date/Calendar";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { GenericButton, GenericButton2 } from "@/components/buttons";
+import { addToCurrencies, addToPeople, addToTrips, getLatestTripId } from "@/database/databaseSqlite";
+import { useSQLiteContext } from "expo-sqlite";
+import { Person } from "../../classes/person";
+import { Currency } from "@/classes/currency";
+import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -29,80 +32,94 @@ export default function AddTrip() {
     return (
         <View style={tripStyles.container}>
             <StatusBar barStyle={'dark-content'}/>
-            <TopSection/>
+            <TopSection title="Add Trip"/>
             <MainBody/>
-        </View>
-    )
-}
-
-function TopSection() {
-    const navigation = useNavigation<NativeStackNavigatorTypes>();
-    const topSectionStyles = StyleSheet.create({
-        container: {
-            paddingHorizontal: 40,
-            backgroundColor: 'skyblue',
-            height: 0.09 * windowHeight,
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-        horizontalContainer: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            width: windowWidth,
-            justifyContent: 'space-between',
-            paddingHorizontal: 10,
-        },
-        titleMessage: {
-            fontSize: 35 / windowFontScale,
-            fontWeight: 'bold',
-        },
-    })
-    
-    function returnHome() {
-        navigation.pop();
-    }
-
-    return (
-        <View style={topSectionStyles.container}>
-            <View style={topSectionStyles.horizontalContainer}>
-                <TouchableOpacity onPress={returnHome}>
-                    <Ionicons name="chevron-back-outline" size={35}/>
-                </TouchableOpacity>
-                <Text style={topSectionStyles.titleMessage}>Add Trip</Text>
-                <View style={{width: 35}}></View>
-            </View>
         </View>
     )
 }
 
 function MainBody() {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+    const db = useSQLiteContext();
 
     const [tripName, setTripName] = useState('');
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
+    const [people, setPeople] = useState<Person[]>([]);
+    const [currencies, setCurrencies] = useState<Currency[]>([new Currency("Singapore Dollars", "SGD")]);
 
-    const mainBodyStyles = StyleSheet.create({
-        container: {
-            flex: 1,
-            backgroundColor: 'whitesmoke',
-            borderTopLeftRadius: 15,
-            borderTopRightRadius: 15,
-            paddingTop: 15,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2, // subtler shadow
-            shadowRadius: 2,
-            elevation: 2, // for Android shadow
-            alignItems: 'center',
-        },
-    })
+    function addPerson() {
+        setPeople([...people, new Person("", 0)]);
+        console.log("Added, Number of people:", people.length);
+    }
 
-    function dummy() {}
+    function deletePerson(index: number) {
+        setPeople(people.filter((_, i) => i !== index));
+        console.log("Removed, Number of people:", people.length);
+    }
+
+    function updateName(name: string, index: number) {
+        const newPeople = [...people];
+        newPeople[index].setName(name);
+        setPeople(newPeople);
+        console.log("Name:", people[index].getName(), "| Weight:", people[index].getWeight())
+    }
+
+    function updateWeight(weight: string, index: number) {
+        const newPeople = [...people];
+        newPeople[index].setWeight(parseFloat(weight));
+        setPeople(newPeople);
+        console.log("Name:", people[index].getName(), "| Weight:", people[index].getWeight())
+    }
+
+    function addCurrency() {
+        setCurrencies([...currencies, new Currency("", "")]);
+    }
+
+    function deleteCurrency(index: number) {
+        setCurrencies(currencies.filter((_, i) => i !== index));
+    }
+
+    function updateCurrency(name: string, index: number) {
+        const newCurrencies = [...currencies];
+        newCurrencies[index].setName(name);
+        setCurrencies(newCurrencies);
+    }
+
+    function updateAbbreviation(abbreviation: string, index: number) {
+        const newCurrencies = [...currencies];
+        newCurrencies[index].setAbbreviation(abbreviation);
+        setCurrencies(newCurrencies);
+    }
+
+    async function confirmDetails() {
+        await addToTrips(db, tripName, location, startDate, endDate);
+        console.log(tripName, location, startDate.toLocaleDateString(), endDate.toLocaleDateString());
+        const data = await getLatestTripId(db) as {id: number}[];
+        if (data && data.length > 0) {
+            console.log(data[0].id);
+        } else {
+            console.error("Data is empty");
+        }
+
+        for (let i = 0; i < people.length; i++) {
+            await addToPeople(db, people[i].getName(), people[i].getWeight(), data[0].id);
+            console.log(people[i].getName(), people[i].getWeight());
+        }
+        for (let i = 0; i < currencies.length; i++) {
+            await addToCurrencies(db, currencies[i].getName(), currencies[i].getAbbreviation(), data[0].id);
+            console.log(currencies[i].getName(), currencies[i].getAbbreviation());
+        }
+
+        console.log("Confirmed");
+        navigation.goBack();
+    }
 
     return (
-        <View style={mainBodyStyles.container}>
+        <View style={genericMainBodyStyles.outerContainer}>
+        <ScrollView>
+        <View style={genericMainBodyStyles.container}>
             <Details 
                 setTripName={setTripName}
                 setLocation={setLocation}
@@ -113,13 +130,23 @@ function MainBody() {
             <Divider/>
             <VerticalGap height={20}/>
 
-            <DisplayMembers/>
+            <DisplayMembers
+                addPerson={addPerson}
+                deletePerson={deletePerson}
+                updateName={updateName}
+                updateWeight={updateWeight}
+                people={people}/>
 
             <VerticalGap height={20}/>
             <Divider/>
             <VerticalGap height={20}/>
 
-            <DisplayCurrencies/>
+            <DisplayCurrencies
+                addCurrency={addCurrency}
+                deleteCurrency={deleteCurrency}
+                updateCurrency={updateCurrency}
+                updateAbbreviation={updateAbbreviation}
+                currencies={currencies}/>
 
             <VerticalGap height={20}/>
             <Divider/>
@@ -130,7 +157,12 @@ function MainBody() {
                 height={45} 
                 width={210} 
                 colour="dodgerblue" 
-                action={dummy}/>
+                action={confirmDetails}
+                fontsize={22}/>
+            
+            <VerticalGap height={40}/>
+        </View>
+        </ScrollView>
         </View>
     )
 }
@@ -239,7 +271,15 @@ function InputMini({ setVariable, variablePlaceHolder }: InputMiniProps) {
     )
 }
 
-function DisplayMembers() {
+interface displayMembersProps {
+    people: Person[];
+    addPerson: () => void;
+    deletePerson: (index: number) => void;
+    updateName: (name: string, index: number) => void;
+    updateWeight: (weight: string, index: number) => void;
+}
+function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeight}: displayMembersProps) {
+
     const membersStyles = StyleSheet.create({
         container: {
             alignItems: 'center',
@@ -254,30 +294,100 @@ function DisplayMembers() {
             alignItems: 'center',
         },
     })
-
-    function dummy() {}
 
     return (
         <View style={membersStyles.container}>
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Members</Text>
                 <HorizontalGap width={15}/>
-                <GenericButton text="Add" height={35} width={55} colour="lime" action={dummy}/>
+                <GenericButton text="Add" height={35} width={55} 
+                    colour="lime" action={addPerson} fontsize={15}/>
+            </View>
+            <VerticalGap height={20}/>
+            {people.map((person, index) => (
+                <Member key={index} person={person} index={index}
+                    deletePerson={deletePerson}
+                    updateName={updateName}
+                    updateWeight={updateWeight}/>
+            ))}
+        </View>
+    )
+}
+
+const memberStyles = StyleSheet.create({
+    container: {
+
+    },
+    internalContainer: {
+        flexDirection: 'row',
+        width: 0.8 * windowWidth,
+        justifyContent: 'space-between',
+    },
+    field: {
+        borderBottomWidth: 2,
+        borderColor: 'grey',
+        fontSize: 20,
+    },
+    nameField: {
+        width: 0.48 * windowWidth,
+    },
+    weightField: {
+        width: 0.20 * windowWidth,
+    },
+    currencyField: {
+        width: 0.50 * windowWidth,
+    },
+    abbreviationField: {
+        width: 0.18 * windowWidth,
+    },
+})
+interface memberProps {
+    person: Person;
+    index: number;
+    deletePerson: (index: number) => void;
+    updateName: (name: string, index: number) => void;
+    updateWeight: (weight: string, index: number) => void;
+}
+function Member({person, index, deletePerson, updateName, updateWeight}: memberProps) {
+    const initialWeight = person.getWeight();
+
+    const [name, setName] = useState<string>(person.getName());
+    const [weight, setWeight] = useState<string>(initialWeight ? initialWeight.toString() : "");
+
+    return (
+        <View style={memberStyles.container}>
+            <View style={memberStyles.internalContainer}>
+                <TouchableOpacity onPress={() => deletePerson && deletePerson(index)}>
+                    <Ionicons name="remove-circle-outline" size={25} color="red"/>
+                </TouchableOpacity>
+                <TextInput value={name} style={[memberStyles.nameField, memberStyles.field]}
+                    placeholder="Name" placeholderTextColor="grey"
+                    onChangeText={(newName) => {
+                        setName(newName);
+                        updateName(newName, index);
+                    }}/>
+                <TextInput value={weight} 
+                    style={[memberStyles.weightField, memberStyles.field]}
+                    placeholder="Weight" placeholderTextColor="grey"
+                    keyboardType="numeric"
+                    onChangeText={(newWeight) => {
+                        setWeight(newWeight);
+                        updateWeight(newWeight, index);
+                    }}/>
             </View>
             <VerticalGap height={10}/>
         </View>
     )
 }
 
-function Member() {
-    return (
-        <View>
-            <Text>Member</Text>
-        </View>
-    )
+interface displayCurrencyProps {
+    currencies: Currency[];
+    addCurrency: () => void;
+    deleteCurrency: (index: number) => void;
+    updateCurrency: (name: string, index: number) => void;
+    updateAbbreviation: (abbreviation: string, index: number) => void;
 }
-
-function DisplayCurrencies() {
+function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurrency, updateAbbreviation}: displayCurrencyProps) {
     const membersStyles = StyleSheet.create({
         container: {
             alignItems: 'center',
@@ -293,14 +403,55 @@ function DisplayCurrencies() {
         },
     })
 
-    function dummy() {}
-
     return (
         <View style={membersStyles.container}>
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Currencies</Text>
                 <HorizontalGap width={15}/>
-                <GenericButton text="Add" height={35} width={55} colour="lime" action={dummy}/>
+                <GenericButton text="Add" height={35} width={55} 
+                    colour="lime" action={addCurrency} fontsize={15}/>
+            </View>
+            <VerticalGap height={20}/>
+            {currencies.map((currency, index) => (
+                <Money key={index} currency={currency} index={index}
+                    deleteCurrency={deleteCurrency}
+                    updateCurrency={updateCurrency}
+                    updateAbbreviation={updateAbbreviation}/>
+            ))}
+        </View>
+    )
+}
+
+interface moneyProps {
+    currency: Currency;
+    index: number;
+    deleteCurrency: (index: number) => void;
+    updateCurrency: (name: string, index: number) => void;
+    updateAbbreviation: (abbreviation: string, index: number) => void;
+}
+function Money({currency, index, deleteCurrency, updateCurrency, updateAbbreviation}: moneyProps) {
+    const [name, setName] = useState<string>(currency.getName());
+    const [abbreviation, setAbbreviation] = useState<string>(currency.getAbbreviation());
+
+    return (
+        <View style={memberStyles.container}>
+            <View style={memberStyles.internalContainer}>
+                <TouchableOpacity onPress={() => deleteCurrency && deleteCurrency(index)}>
+                    <Ionicons name="remove-circle-outline" size={25} color="red"/>
+                </TouchableOpacity>
+                <TextInput value={name} style={[memberStyles.currencyField, memberStyles.field]}
+                    placeholder="Currency" placeholderTextColor="grey"
+                    onChangeText={(newName) => {
+                        setName(newName);
+                        updateCurrency(newName, index);
+                    }}/>
+                <TextInput value={abbreviation} 
+                    style={[memberStyles.abbreviationField, memberStyles.field]}
+                    placeholder="Abbreviation" placeholderTextColor="grey"
+                    onChangeText={(newWeight) => {
+                        setAbbreviation(newWeight);
+                        updateAbbreviation(newWeight, index);
+                    }}/>
             </View>
             <VerticalGap height={10}/>
         </View>
