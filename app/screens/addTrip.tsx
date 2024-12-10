@@ -1,6 +1,6 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import { Dimensions, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Dimensions, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { ParamsList } from "..";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -10,6 +10,8 @@ import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/d
 import { GenericButton, GenericButton2 } from "@/components/buttons";
 import { addToTrips } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
+import { Person } from "../../classes/person";
+import { Currency } from "@/classes/currency";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -83,14 +85,66 @@ function MainBody() {
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
+    const [people, setPeople] = useState<Person[]>([]);
+    const [currencies, setCurrencies] = useState<Currency[]>([new Currency("Singapore Dollars", "SGD")]);
+
+    function addPerson() {
+        setPeople([...people, new Person("", 0)]);
+        console.log("Added, Number of people:", people.length);
+    }
+
+    function deletePerson(index: number) {
+        setPeople(people.filter((_, i) => i !== index));
+        console.log("Removed, Number of people:", people.length);
+    }
+
+    function updateName(name: string, index: number) {
+        const newPeople = [...people];
+        newPeople[index].setName(name);
+        setPeople(newPeople);
+        console.log("Name:", people[index].getName(), "| Weight:", people[index].getWeight())
+    }
+
+    function updateWeight(weight: string, index: number) {
+        const newPeople = [...people];
+        newPeople[index].setWeight(parseFloat(weight));
+        setPeople(newPeople);
+        console.log("Name:", people[index].getName(), "| Weight:", people[index].getWeight())
+    }
+
+    function addCurrency() {
+        setCurrencies([...currencies, new Currency("", "")]);
+    }
+
+    function deleteCurrency(index: number) {
+        setCurrencies(currencies.filter((_, i) => i !== index));
+    }
+
+    function updateCurrency(name: string, index: number) {
+        const newCurrencies = [...currencies];
+        newCurrencies[index].setName(name);
+        setCurrencies(newCurrencies);
+    }
+
+    function updateAbbreviation(abbreviation: string, index: number) {
+        const newCurrencies = [...currencies];
+        newCurrencies[index].setAbbreviation(abbreviation);
+        setCurrencies(newCurrencies);
+    }
 
     const mainBodyStyles = StyleSheet.create({
         container: {
             flex: 1,
             backgroundColor: 'whitesmoke',
+            alignItems: 'center',
+            width: windowWidth - 30,
+            paddingTop: 15,
+        },
+        outerContainer: {
+            flex: 1,
+            backgroundColor: 'whitesmoke',
             borderTopLeftRadius: 15,
             borderTopRightRadius: 15,
-            paddingTop: 15,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.2, // subtler shadow
@@ -108,6 +162,8 @@ function MainBody() {
     }
 
     return (
+        <View style={mainBodyStyles.outerContainer}>
+        <ScrollView>
         <View style={mainBodyStyles.container}>
             <Details 
                 setTripName={setTripName}
@@ -119,13 +175,23 @@ function MainBody() {
             <Divider/>
             <VerticalGap height={20}/>
 
-            <DisplayMembers/>
+            <DisplayMembers
+                addPerson={addPerson}
+                deletePerson={deletePerson}
+                updateName={updateName}
+                updateWeight={updateWeight}
+                people={people}/>
 
             <VerticalGap height={20}/>
             <Divider/>
             <VerticalGap height={20}/>
 
-            <DisplayCurrencies/>
+            <DisplayCurrencies
+                addCurrency={addCurrency}
+                deleteCurrency={deleteCurrency}
+                updateCurrency={updateCurrency}
+                updateAbbreviation={updateAbbreviation}
+                currencies={currencies}/>
 
             <VerticalGap height={20}/>
             <Divider/>
@@ -138,6 +204,10 @@ function MainBody() {
                 colour="dodgerblue" 
                 action={confirmDetails}
                 fontsize={22}/>
+            
+            <VerticalGap height={40}/>
+        </View>
+        </ScrollView>
         </View>
     )
 }
@@ -246,7 +316,15 @@ function InputMini({ setVariable, variablePlaceHolder }: InputMiniProps) {
     )
 }
 
-function DisplayMembers() {
+interface displayMembersProps {
+    people: Person[];
+    addPerson: () => void;
+    deletePerson: (index: number) => void;
+    updateName: (name: string, index: number) => void;
+    updateWeight: (weight: string, index: number) => void;
+}
+function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeight}: displayMembersProps) {
+
     const membersStyles = StyleSheet.create({
         container: {
             alignItems: 'center',
@@ -261,8 +339,6 @@ function DisplayMembers() {
             alignItems: 'center',
         },
     })
-
-    function dummy() {}
 
     return (
         <View style={membersStyles.container}>
@@ -270,22 +346,93 @@ function DisplayMembers() {
                 <Text style={membersStyles.title}>Members</Text>
                 <HorizontalGap width={15}/>
                 <GenericButton text="Add" height={35} width={55} 
-                    colour="lime" action={dummy} fontsize={15}/>
+                    colour="lime" action={addPerson} fontsize={15}/>
+            </View>
+            <VerticalGap height={20}/>
+            {people.map((person, index) => (
+                <Member key={index} person={person} index={index}
+                    deletePerson={deletePerson}
+                    updateName={updateName}
+                    updateWeight={updateWeight}/>
+            ))}
+        </View>
+    )
+}
+
+const memberStyles = StyleSheet.create({
+    container: {
+
+    },
+    internalContainer: {
+        flexDirection: 'row',
+        width: 0.8 * windowWidth,
+        justifyContent: 'space-between',
+    },
+    field: {
+        borderBottomWidth: 2,
+        borderColor: 'grey',
+        fontSize: 20,
+    },
+    nameField: {
+        width: 0.48 * windowWidth,
+    },
+    weightField: {
+        width: 0.20 * windowWidth,
+    },
+    currencyField: {
+        width: 0.50 * windowWidth,
+    },
+    abbreviationField: {
+        width: 0.18 * windowWidth,
+    },
+})
+interface memberProps {
+    person: Person;
+    index: number;
+    deletePerson: (index: number) => void;
+    updateName: (name: string, index: number) => void;
+    updateWeight: (weight: string, index: number) => void;
+}
+function Member({person, index, deletePerson, updateName, updateWeight}: memberProps) {
+    const initialWeight = person.getWeight();
+
+    const [name, setName] = useState<string>(person.getName());
+    const [weight, setWeight] = useState<string>(initialWeight ? initialWeight.toString() : "");
+
+    return (
+        <View style={memberStyles.container}>
+            <View style={memberStyles.internalContainer}>
+                <TouchableOpacity onPress={() => deletePerson && deletePerson(index)}>
+                    <Ionicons name="remove-circle-outline" size={25} color="red"/>
+                </TouchableOpacity>
+                <TextInput value={name} style={[memberStyles.nameField, memberStyles.field]}
+                    placeholder="Name" placeholderTextColor="grey"
+                    onChangeText={(newName) => {
+                        setName(newName);
+                        updateName(newName, index);
+                    }}/>
+                <TextInput value={weight} 
+                    style={[memberStyles.weightField, memberStyles.field]}
+                    placeholder="Weight" placeholderTextColor="grey"
+                    keyboardType="numeric"
+                    onChangeText={(newWeight) => {
+                        setWeight(newWeight);
+                        updateWeight(newWeight, index);
+                    }}/>
             </View>
             <VerticalGap height={10}/>
         </View>
     )
 }
 
-function Member() {
-    return (
-        <View>
-            <Text>Member</Text>
-        </View>
-    )
+interface displayCurrencyProps {
+    currencies: Currency[];
+    addCurrency: () => void;
+    deleteCurrency: (index: number) => void;
+    updateCurrency: (name: string, index: number) => void;
+    updateAbbreviation: (abbreviation: string, index: number) => void;
 }
-
-function DisplayCurrencies() {
+function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurrency, updateAbbreviation}: displayCurrencyProps) {
     const membersStyles = StyleSheet.create({
         container: {
             alignItems: 'center',
@@ -301,15 +448,55 @@ function DisplayCurrencies() {
         },
     })
 
-    function dummy() {}
-
     return (
         <View style={membersStyles.container}>
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Currencies</Text>
                 <HorizontalGap width={15}/>
                 <GenericButton text="Add" height={35} width={55} 
-                    colour="lime" action={dummy} fontsize={15}/>
+                    colour="lime" action={addCurrency} fontsize={15}/>
+            </View>
+            <VerticalGap height={20}/>
+            {currencies.map((currency, index) => (
+                <Money key={index} currency={currency} index={index}
+                    deleteCurrency={deleteCurrency}
+                    updateCurrency={updateCurrency}
+                    updateAbbreviation={updateAbbreviation}/>
+            ))}
+        </View>
+    )
+}
+
+interface moneyProps {
+    currency: Currency;
+    index: number;
+    deleteCurrency: (index: number) => void;
+    updateCurrency: (name: string, index: number) => void;
+    updateAbbreviation: (abbreviation: string, index: number) => void;
+}
+function Money({currency, index, deleteCurrency, updateCurrency, updateAbbreviation}: moneyProps) {
+    const [name, setName] = useState<string>(currency.getName());
+    const [abbreviation, setAbbreviation] = useState<string>(currency.getAbbreviation());
+
+    return (
+        <View style={memberStyles.container}>
+            <View style={memberStyles.internalContainer}>
+                <TouchableOpacity onPress={() => deleteCurrency && deleteCurrency(index)}>
+                    <Ionicons name="remove-circle-outline" size={25} color="red"/>
+                </TouchableOpacity>
+                <TextInput value={name} style={[memberStyles.currencyField, memberStyles.field]}
+                    placeholder="Currency" placeholderTextColor="grey"
+                    onChangeText={(newName) => {
+                        setName(newName);
+                        updateCurrency(newName, index);
+                    }}/>
+                <TextInput value={abbreviation} 
+                    style={[memberStyles.abbreviationField, memberStyles.field]}
+                    placeholder="Abbreviation" placeholderTextColor="grey"
+                    onChangeText={(newWeight) => {
+                        setAbbreviation(newWeight);
+                        updateAbbreviation(newWeight, index);
+                    }}/>
             </View>
             <VerticalGap height={10}/>
         </View>
