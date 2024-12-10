@@ -269,7 +269,8 @@ function DisplayMembers() {
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Members</Text>
                 <HorizontalGap width={15}/>
-                <GenericButton text="Add" height={35} width={55} colour="lime" action={dummy}/>
+                <GenericButton text="Add" height={35} width={55} 
+                    colour="lime" action={dummy} fontsize={15}/>
             </View>
             <VerticalGap height={10}/>
         </View>
@@ -307,7 +308,8 @@ function DisplayCurrencies() {
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Currencies</Text>
                 <HorizontalGap width={15}/>
-                <GenericButton text="Add" height={35} width={55} colour="lime" action={dummy}/>
+                <GenericButton text="Add" height={35} width={55} 
+                    colour="lime" action={dummy} fontsize={15}/>
             </View>
             <VerticalGap height={10}/>
         </View>

@@ -9,6 +9,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { deleteTrip } from "@/database/databaseSqlite";
 import { GenericButton2 } from "@/components/buttons";
+import { ConfirmDelete } from "@/components/confirmDelete";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -136,36 +137,49 @@ const tripStyles = StyleSheet.create({
 function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>}) {
     const db = useSQLiteContext();
     const { id, trip_name, location, start_date, end_date } = item;
-    
+    const [isVisible, setIsVisible] = useState(false);
+
     function editTrip() {
 
     }
 
+    function pressDelete() {
+        setIsVisible(true);
+    }
+
+    function confirmDelete() {
+        deleteItem && deleteItem(id);
+    }
+
     return (
-        <TouchableOpacity style={tripStyles.container} activeOpacity={0.4}>
-            <View style={tripStyles.textContainer}>
-                <Text style={tripStyles.tripName} numberOfLines={1} ellipsizeMode="tail">{trip_name}</Text>
-                <VerticalGap height={5}/>
-                <Text style={tripStyles.location} numberOfLines={1} ellipsizeMode="tail">{location}</Text>
-                <VerticalGap height={15}/>
-                <Text style={tripStyles.date}>{start_date} - {end_date}</Text>
-                <VerticalGap height={15}/>
-            </View>
-            <View>
-            <View style={{flexDirection: 'row'}}>
-                <TouchableOpacity>
-                    <GenericButton2 
-                        text="Edit" colour="dodgerblue" 
-                        height={30} width={45} 
-                        action={editTrip} fontsize={14}/>
-                </TouchableOpacity>
-                <HorizontalGap width={8}/>
-                <TouchableOpacity onPress={() => deleteItem && deleteItem(id)}>
-                    <Ionicons name="trash-outline" size={28} color="red"/>
-                </TouchableOpacity>
-            </View>
-            </View>
-        </TouchableOpacity>
+        <View>
+            <VerticalGap key={item.id} height={10}/>
+            <TouchableOpacity style={tripStyles.container} activeOpacity={0.4}>
+                <View style={tripStyles.textContainer}>
+                    <Text style={tripStyles.tripName} numberOfLines={1} ellipsizeMode="tail">{trip_name}</Text>
+                    <VerticalGap height={5}/>
+                    <Text style={tripStyles.location} numberOfLines={1} ellipsizeMode="tail">{location}</Text>
+                    <VerticalGap height={15}/>
+                    <Text style={tripStyles.date}>{start_date} - {end_date}</Text>
+                    <VerticalGap height={15}/>
+                </View>
+                <View>
+                    <View style={{flexDirection: 'row'}}>
+                        <TouchableOpacity>
+                            <GenericButton2 
+                                text="Edit" colour="dodgerblue" 
+                                height={30} width={45} 
+                                action={editTrip} fontsize={14}/>
+                        </TouchableOpacity>
+                        <HorizontalGap width={8}/>
+                        <TouchableOpacity onPress={pressDelete}>
+                            <Ionicons name="trash-outline" size={28} color="red"/>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </TouchableOpacity>
+            <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
+        </View>
     )
 }
 
@@ -222,10 +236,7 @@ function DisplayTrips() {
         <ScrollView style={displayTripsStyles.container}>
             <View style={displayTripsStyles.internalContainer}>
             {trips.map((item) => (
-                <View>
-                    <VerticalGap height={10}/>
-                    <Trip key={item.id} item={item} deleteItem={deleteItem}/>
-                </View>
+                <Trip key={item.id} item={item} deleteItem={deleteItem}/>
             ))}
             <VerticalGap height={40}/>
             </View>
