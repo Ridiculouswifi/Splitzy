@@ -154,7 +154,7 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
     }
 
     function goToTrip() {
-        navigation.navigate('Trip', { tripName: trip_name });
+        navigation.navigate('Trip', { tripId: id });
     }
 
     return (

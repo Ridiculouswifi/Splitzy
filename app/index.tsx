@@ -15,7 +15,7 @@ const Stack = createNativeStackNavigator<ParamsList>();
 
 export type ParamsList = {
     Home: undefined;
-    Trip: { tripName: string }
+    Trip: { tripId: number }
     AddTrip: undefined;
 }
 
