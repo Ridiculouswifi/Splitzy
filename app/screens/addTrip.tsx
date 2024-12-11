@@ -68,7 +68,7 @@ function MainBody() {
 
     function updateWeight(weight: string, index: number) {
         const newPeople = [...people];
-        newPeople[index].setWeight(parseFloat(weight));
+        newPeople[index].setWeight(parseInt(weight));
         setPeople(newPeople);
         console.log("Name:", people[index].getName(), "| Weight:", people[index].getWeight())
     }
