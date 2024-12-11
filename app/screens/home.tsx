@@ -223,6 +223,7 @@ function DisplayTrips() {
 
     const refetchItems = useCallback(() => {
         refetch();
+        console.log("Refetched");
     }, [db])
 
     useEffect(() => {
@@ -237,10 +238,10 @@ function DisplayTrips() {
     async function deleteItem(id: number) {
         console.log("Deleting:", id);
         await deleteTrip(db, id);
+        await refetchItems();
+
         await deleteRelatedPeople(db, id);
         await deleteRelatedCurrencies(db, id);
-
-        await refetchItems();
     }
 
     return (

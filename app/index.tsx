@@ -30,10 +30,10 @@ export type ParamsList = {
     Expenses: undefined;
 }
 
-//const db = openDatabaseSync("splitzy.db");
+const db = openDatabaseSync("splitzy.db");
 
 export default function Index() {
-    //useDrizzleStudio(db);
+    useDrizzleStudio(db);
 
     return (
         <SafeAreaProvider>

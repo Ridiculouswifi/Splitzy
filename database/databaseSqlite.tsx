@@ -1,7 +1,7 @@
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { openDatabaseSync, SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
 
-//const database = openDatabaseSync("splitzy.db");
+const database = openDatabaseSync("splitzy.db");
 
 export async function createTables(db: SQLiteDatabase) {
     await db.execAsync(`
