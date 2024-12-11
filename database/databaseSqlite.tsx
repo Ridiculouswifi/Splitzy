@@ -15,7 +15,7 @@ export async function createTables(db: SQLiteDatabase) {
         CREATE TABLE IF NOT EXISTS people (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            weight DECIMAL(3,2),
+            weight INTEGER,
             trip_id INTEGER REFERENCES trips(id)
         );
 
