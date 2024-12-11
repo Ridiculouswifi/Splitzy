@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { GenericButton, GenericButton2 } from "@/components/buttons";
-import { addToCurrencies, addToPeople, addToTrips, getLatestTripId } from "@/database/databaseSqlite";
+import { addToCurrencies, addToPeople, addToTrips, createTrip, getLatestTripId } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { Person } from "../../classes/person";
 import { Currency } from "@/classes/currency";
@@ -102,6 +102,8 @@ function MainBody() {
         } else {
             console.error("Data is empty");
         }
+
+        await createTrip(db, data[0].id);
 
         for (let i = 0; i < people.length; i++) {
             await addToPeople(db, people[i].getName(), people[i].getWeight(), data[0].id);

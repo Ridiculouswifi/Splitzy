@@ -1,4 +1,7 @@
-import { SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
+import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
+import { openDatabaseSync, SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
+
+//const database = openDatabaseSync("splitzy.db");
 
 export async function createTables(db: SQLiteDatabase) {
     await db.execAsync(`
@@ -29,6 +32,7 @@ export async function createTables(db: SQLiteDatabase) {
     console.log("Tables Created");
 };
 
+/* Functions for trips table */
 export async function addToTrips(db: SQLiteDatabase, 
     tripName: string, location: string, 
     startDate: Date, endDate: Date): Promise<void> {
@@ -41,6 +45,11 @@ export async function addToTrips(db: SQLiteDatabase,
 
 export async function deleteTrip(db: SQLiteDatabase, id: number): Promise<void> {
     await db.runAsync(`DELETE FROM trips WHERE id = ?;`, id);
+
+    let tableName: string = "trip_" + id.toString();
+    const data = await db.execAsync(`DROP TABLE ${tableName};`);
+
+    console.log(data, "Deleted");
 }
 
 export async function getLatestTripId(db: SQLiteDatabase): Promise<unknown[]> {
@@ -53,6 +62,7 @@ export async function getLatestTripId(db: SQLiteDatabase): Promise<unknown[]> {
     return data;
 }
 
+/* Functions for people table */
 export async function addToPeople(db: SQLiteDatabase, name: string, 
     weight: number, tripId: number): Promise<void> {
         await db.runAsync(`
@@ -77,6 +87,7 @@ export async function getRelatedPeople(db: SQLiteDatabase, tripId: number) : Pro
     `, tripId);
 }
 
+/* Functions for currencies table */
 export async function addToCurrencies(db: SQLiteDatabase, currencyName: string, 
     abbreviation: string, tripId: number): Promise<void> {
         await db.runAsync(`
@@ -99,4 +110,23 @@ export async function getRelatedCurrencies(db: SQLiteDatabase, tripId: number): 
         SELECT * FROM currencies
         WHERE trip_id = ?;    
     `, tripId);
+}
+
+/* Functions to store expenses */
+export async function createTrip(db: SQLiteDatabase, tripId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    const sanitizedTableName = tableName.replace(/[^a-zA-Z0-9_]/g, ''); // Removes characters that can cause SQL injection
+
+    const data = await db.execAsync(`
+        PRAGMA journal_mode = WAL;
+        
+        CREATE TABLE IF NOT EXISTS ${sanitizedTableName} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            payer_id INTEGER REFERENCES people(id),
+            expense FLOAT,
+            currency_id INTEGER REFERENCES currencies(id)
+        );
+    `);
+    
+    console.log(data, "created");
 }

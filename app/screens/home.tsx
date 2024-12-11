@@ -151,6 +151,7 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
 
     function confirmDelete() {
         deleteItem && deleteItem(id);
+        setIsVisible(false);
     }
 
     function goToTrip() {

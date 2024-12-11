@@ -1,18 +1,18 @@
-import { NavigationContainer, RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp, useRoute } from "@react-navigation/native";
 import React from "react";
 import { Dimensions, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import Home from "./screens/home";
 import Trip from "./screens/trip";
 import AddTrip from "./screens/addTrip";
 import Expenses from "./screens/expenses";
 
-import { SQLiteProvider } from "expo-sqlite";
+import { openDatabaseSync, SQLiteProvider } from "expo-sqlite";
 import * as DB from "../database/databaseSqlite";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { TopSection } from "@/components/screenTitle";
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 
 const Stack = createNativeStackNavigator<ParamsList>();
 const Tab = createBottomTabNavigator<ParamsList>();
@@ -30,7 +30,11 @@ export type ParamsList = {
     Expenses: undefined;
 }
 
+//const db = openDatabaseSync("splitzy.db");
+
 export default function Index() {
+    //useDrizzleStudio(db);
+
     return (
         <SafeAreaProvider>
             <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
