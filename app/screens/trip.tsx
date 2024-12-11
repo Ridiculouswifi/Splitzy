@@ -8,8 +8,8 @@ import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 
-type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
-type RouteTypes = RouteProp<ParamsList, "Trip">;
+type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Details">;
+type RouteTypes = RouteProp<ParamsList, "Details">;
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -29,7 +29,7 @@ export default function Trip() {
     return (
         <View style={tripStyles.container}>
             <StatusBar barStyle={'dark-content'}/>
-            <TopSection title="Trip Details"/>
+            <TopSection title="Trip"/>
             <MainBody tripId={tripId}/>
         </View>
     )
