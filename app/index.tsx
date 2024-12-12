@@ -5,14 +5,15 @@ import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-cont
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
+import { openDatabaseSync, SQLiteProvider } from "expo-sqlite";
+import * as DB from "../database/databaseSqlite";
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+
 import Home from "./screens/home";
 import Trip from "./screens/trip";
 import AddTrip from "./screens/addTrip";
 import Expenses from "./screens/expenses";
-
-import { openDatabaseSync, SQLiteProvider } from "expo-sqlite";
-import * as DB from "../database/databaseSqlite";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+import AddExpense from "./screens/addExpense";
 
 const Stack = createNativeStackNavigator<ParamsList>();
 const Tab = createBottomTabNavigator<ParamsList>();
@@ -27,13 +28,14 @@ export type ParamsList = {
     Home: undefined;
     Details: { tripId: number }
     AddTrip: undefined;
-    Expenses: undefined;
+    Expenses: { tripId: number };
+    AddExpense: { tripId: number }
 }
 
-const db = openDatabaseSync("splitzy.db");
+//const db = openDatabaseSync("splitzy.db");
 
 export default function Index() {
-    useDrizzleStudio(db);
+    //useDrizzleStudio(db);
 
     return (
         <SafeAreaProvider>
@@ -42,6 +44,7 @@ export default function Index() {
                     <Stack.Screen name="Home" component={Home}/>
                     <Stack.Screen name="TabNavigator" component={TabNavigator}/>
                     <Stack.Screen name="AddTrip" component={AddTrip}/>
+                    <Stack.Screen name="AddExpense" component={AddExpense}/>
                 </Stack.Navigator>
             </SQLiteProvider>
         </SafeAreaProvider>
@@ -76,6 +79,7 @@ function TabNavigator() {
             <Tab.Screen
                 name="Expenses"
                 component={Expenses}
+                initialParams={{tripId}}
             />
         </Tab.Navigator>
     )
