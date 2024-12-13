@@ -1,8 +1,10 @@
 export class Currency {
+    private id: number
     private name: string;
     private abbreviation: string;
 
-    public constructor(name: string, abbreviation: string) {
+    public constructor(id: number, name: string, abbreviation: string) {
+        this.id = id;
         this.name = name;
         this.abbreviation = abbreviation;
     }
@@ -21,5 +23,13 @@ export class Currency {
 
     public setAbbreviation(abbreviation: string): void {
         this.abbreviation = abbreviation;
+    }
+
+    public getId(): number {
+        return this.id;
+    }
+
+    public setId(id: number): void {
+        this.id = id;
     }
 }

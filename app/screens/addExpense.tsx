@@ -1,15 +1,17 @@
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
-import { Divider, VerticalGap } from "@/components/gap";
-import { useState } from "react";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
+import { useCallback, useEffect, useState } from "react";
 import { Currency } from "@/classes/currency";
 import { GenericButton2 } from "@/components/buttons";
 import Picker from "@ouroboros/react-native-picker";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
+import { useSQLiteContext } from "expo-sqlite";
 
 type RouteTypes = RouteProp<ParamsList, "AddExpense">;
 
@@ -38,16 +40,89 @@ export default function AddExpense() {
     )
 }
 
+interface CurrencyTableTypes {
+    id: number,
+    currency_name: string,
+    abbreviation: string,
+    trip_id: number
+}
+interface CurrencyPickerProps {
+    value: number,
+    text: string,
+}
+interface PeopleTableTypes {
+    id: number,
+    name: string,
+    weight: number,
+    trip_id: number,
+}
 function MainBody({tripId}: {tripId: number}) {
-    function confirmExpense() {
+    const db = useSQLiteContext();
+    
+    const [expenseName, setExpenseName] = useState<string>('');
+    const [amount, setAmount] = useState<string>('');
+    const [currencyId, setCurrencyId] = useState<number>(0)
+    const [date, setDate] = useState(new Date());
+    const [people, setPeople] = useState<PeopleTableTypes[]>([]);
 
+    const [currencyList, setCurrencyList] = useState<CurrencyPickerProps[]>([]);
+    
+    async function convertCurrencies(): Promise<void> {
+        const currencyData = await getRelatedCurrencies(db, tripId);
+        const rawList = currencyData as CurrencyTableTypes[];
+        const convertedList: CurrencyPickerProps[] = rawList.map((currency) => ({
+            value: currency.id,
+            text: currency.abbreviation,
+        }))
+        setCurrencyList(convertedList);
     }
+
+    async function obtainPeople() {
+        const peopleData = await getRelatedPeople(db, tripId) as PeopleTableTypes[];
+        setPeople(peopleData);
+    }
+
+    async function updatePeople(id: number, newWeight: string) {
+        const oldData = people;
+        for (let i = 0; i < oldData.length; i++) {
+            if (oldData[i].id == id) {
+                oldData[i].weight = parseInt(newWeight);
+            }
+        }
+        setPeople(oldData);
+    }
+
+    function confirmExpense() {
+        console.log(expenseName, amount, currencyId, date);
+        console.log(people);
+    }
+
+    useEffect(() => {
+        convertCurrencies();
+        obtainPeople();
+    }, [])
     
     return (
-        <View style={genericMainBodyStyles.outerContainer}>
+        <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView>
         <View style={genericMainBodyStyles.container}>
-            <Details tripId={tripId}/>
+            <Details 
+                tripId={tripId}
+                setExpenseName={setExpenseName}
+                setAmount={setAmount}
+                setDate={setDate}
+                setCurrencyId={setCurrencyId}
+                currencyList={currencyList}/>
+
+            <VerticalGap height={20}/>
+            <Divider/>
+            <VerticalGap height={20}/>
+
+            <DisplayMembers 
+                tripId={tripId}
+                people={people}
+                updatePeople={updatePeople}/>
 
             <VerticalGap height={20}/>
             <Divider/>
@@ -64,60 +139,71 @@ function MainBody({tripId}: {tripId: number}) {
             <VerticalGap height={40}/>
         </View>
         </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
     )
 }
 
-function Details({tripId}: {tripId: number}){
+interface detailsProps {
+    tripId: number;
+    setExpenseName: (variable: string) => void;
+    setAmount: (variable: string) => void;
+    setDate: (variable: Date) => void;
+    setCurrencyId: (variable: number) => void;
+    currencyList: CurrencyPickerProps[];
+}
+const detailsStyle = StyleSheet.create({
+    container: {
+        alignItems: "center",
+        paddingTop: 10,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        alignSelf: 'flex-start',
+    },
+    miniContainer: {
+        flexDirection: 'row',
+        width: 0.8 * windowWidth,
+        justifyContent: 'space-between',
+    },
+    pickerContainer: {
+        width: 0.25 * windowWidth,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    picker: {
+        fontSize: 20,
+        width: 0.21 * windowWidth,
+    },
+})
+function Details(props: detailsProps){
     const insets = useSafeAreaInsets();
 
-    const [expenseName, setExpenseName] = useState<string>('');
-    const [amount, setAmount] = useState<string>('');
-    const [currency, setCurrency] = useState<Currency>(new Currency("", ""))
-    const [date, setDate] = useState(new Date());
+    const [picker, setPicker] = useState(0);
 
-    const [picker, setPicker] = useState('Singapore Dollar');
-    
-    const detailsStyle = StyleSheet.create({
-        container: {
-            alignItems: "center",
-            paddingTop: 10,
-        },
-        title: {
-            fontSize: 18,
-            fontWeight: 'bold',
-            alignSelf: 'flex-start',
-        },
-        miniContainer: {
-            flexDirection: 'row',
-            width: 0.8 * windowWidth,
-            justifyContent: 'space-between',
-        },
-        pickerContainer: {
-            width: 0.25 * windowWidth,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-        },
-        picker: {
-            fontSize: 20,
-        },
-    })
+    useEffect(() => {
+        if (props.currencyList[0] != undefined) {
+            setPicker(props.currencyList[0].value);
+            props.setCurrencyId(props.currencyList[0].value);
+        }
+    }, [props.currencyList]);
+
     return (
         <View style={detailsStyle.container}>
             <Text style={detailsStyle.title}>Details</Text>
             <VerticalGap height={20}/>
-            <Input setVariable={setExpenseName} variablePlaceHolder="Expense Name" width={0.8 * windowWidth}/>
+            <Input setVariable={props.setExpenseName} variablePlaceHolder="Expense Name" width={0.8 * windowWidth}/>
             <VerticalGap height={20}/>
             <View style={detailsStyle.miniContainer}>
-                <Input setVariable={setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth}/>
+                <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth}/>
                 <View style={[inputStyles.inputField, detailsStyle.pickerContainer]}>
                     <Picker 
-                        onChanged={setPicker}
-                        options={[
-                            {value: 'Singapore Dollar', text: 'SGD'},
-                            {value: 'Vietnamese Dong', text: 'VND'}
-                        ]}
+                        onChanged={(newValue) => {
+                            setPicker(newValue);
+                            props.setCurrencyId(newValue);
+                        }}
+                        options={props.currencyList}
                         value={picker}
                         style={detailsStyle.picker}
                     />
@@ -125,7 +211,7 @@ function Details({tripId}: {tripId: number}){
                 </View>
             </View>
             <VerticalGap height={20}/>
-            <DateInput setVariable={setDate} variablePlaceHolder="Date"/>
+            <DateInput setVariable={props.setDate} variablePlaceHolder="Date"/>
         </View>
     )
 }
@@ -188,6 +274,97 @@ function DateInput({ setVariable, variablePlaceHolder }: DateInputProps) {
                 value={date}
                 onChange={setAfterDateChange}
                 />
+        </View>
+    )
+}
+
+interface displayMembersProps {
+    tripId: number;
+    people: PeopleTableTypes[];
+    updatePeople: (id: number, newWeight: string) => void;
+}
+const displayMembersStyles = StyleSheet.create({
+    container: {
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    miniContainer: {
+        flexDirection: 'row',
+        width: 0.8 * windowWidth,
+        alignItems: 'center',
+    },
+})
+function DisplayMembers(props: displayMembersProps) {
+    
+    return (
+        <View style={displayMembersStyles.container}>
+            <View style={displayMembersStyles.miniContainer}>
+                <Text style={displayMembersStyles.title}>Members</Text>
+                <HorizontalGap width={15}/>
+            </View>
+            <VerticalGap height={20}/>
+            {props.people.map((person) => (
+                <Member key={person.id} memberId={person.id}
+                    name={person.name} weight={person.weight}
+                    updatePeople={props.updatePeople}/>
+            ))}
+        </View>
+    )
+}
+
+interface memberProps {
+    memberId: number;
+    name: string;
+    weight: number;
+    updatePeople: (id: number, newWeight: string) => void;
+}
+const memberStyles = StyleSheet.create({
+    container: {
+
+    },
+    internalContainer: {
+        flexDirection: 'row',
+        width: 0.8 * windowWidth,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    field: {
+        borderBottomWidth: 2,
+        borderColor: 'grey',
+        fontSize: 20,
+        width: 0.23 * windowWidth,
+    },
+    nameField: {
+        backgroundColor: 'lightgrey',
+        width: 0.48 * windowWidth,
+        height: 40,
+        justifyContent: 'center',
+        paddingHorizontal: 15,
+        borderRadius: 8,
+    },
+    name: {
+        fontSize: 20,
+    }
+})
+function Member(props: memberProps) {
+    const [weight, setWeight] = useState<string>(props.weight.toString());
+    
+    return (
+        <View style={memberStyles.container}>
+            <View style={memberStyles.internalContainer}>
+                <View style={memberStyles.nameField}>
+                    <Text style={memberStyles.name}>{props.name}</Text>
+                </View>
+                <TextInput style={memberStyles.field} value={weight}
+                    onChangeText={(newWeight) => {
+                        setWeight(newWeight);
+                        props.updatePeople(props.memberId, newWeight);
+                    }}/>
+            </View>
+            <VerticalGap height={10}/>
         </View>
     )
 }

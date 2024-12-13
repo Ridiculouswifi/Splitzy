@@ -1,6 +1,6 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import { Dimensions, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { ParamsList } from "..";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -47,7 +47,7 @@ function MainBody() {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [people, setPeople] = useState<Person[]>([]);
-    const [currencies, setCurrencies] = useState<Currency[]>([new Currency("Singapore Dollars", "SGD")]);
+    const [currencies, setCurrencies] = useState<Currency[]>([new Currency(0, "Singapore Dollars", "SGD")]);
 
     function addPerson() {
         setPeople([...people, new Person("", 0)]);
@@ -74,7 +74,7 @@ function MainBody() {
     }
 
     function addCurrency() {
-        setCurrencies([...currencies, new Currency("", "")]);
+        setCurrencies([...currencies, new Currency(0, "", "")]);
     }
 
     function deleteCurrency(index: number) {
@@ -119,7 +119,8 @@ function MainBody() {
     }
 
     return (
-        <View style={genericMainBodyStyles.outerContainer}>
+        <KeyboardAvoidingView style={[genericMainBodyStyles.outerContainer, {display: 'flex'}]}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView>
         <View style={genericMainBodyStyles.container}>
             <Details 
@@ -165,7 +166,7 @@ function MainBody() {
             <VerticalGap height={40}/>
         </View>
         </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
     )
 }
 
