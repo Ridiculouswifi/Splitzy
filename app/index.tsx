@@ -32,10 +32,10 @@ export type ParamsList = {
     AddExpense: { tripId: number }
 }
 
-//const db = openDatabaseSync("splitzy.db");
+const db = openDatabaseSync("splitzy.db");
 
 export default function Index() {
-    //useDrizzleStudio(db);
+    useDrizzleStudio(db);
 
     return (
         <SafeAreaProvider>

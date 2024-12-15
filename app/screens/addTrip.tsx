@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { GenericButton, GenericButton2 } from "@/components/buttons";
-import { addToCurrencies, addToPeople, addToTrips, createTrip, getLatestTripId } from "@/database/databaseSqlite";
+import { addMembers, addToCurrencies, addToPeople, addToTrips, createMemberColumn, createTrip, getLatestTripId } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { Person } from "../../classes/person";
 import { Currency } from "@/classes/currency";
@@ -113,6 +113,8 @@ function MainBody() {
             await addToCurrencies(db, currencies[i].getName(), currencies[i].getAbbreviation(), data[0].id);
             console.log(currencies[i].getName(), currencies[i].getAbbreviation());
         }
+
+        await addMembers(db, data[0].id);
 
         console.log("Confirmed");
         navigation.goBack();

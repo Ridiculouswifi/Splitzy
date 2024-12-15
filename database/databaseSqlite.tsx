@@ -1,7 +1,7 @@
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { openDatabaseSync, SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
 
-//const database = openDatabaseSync("splitzy.db");
+const database = openDatabaseSync("splitzy.db");
 
 export async function createTables(db: SQLiteDatabase) {
     await db.execAsync(`
@@ -122,11 +122,51 @@ export async function createTrip(db: SQLiteDatabase, tripId: number) {
         
         CREATE TABLE IF NOT EXISTS ${sanitizedTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
             payer_id INTEGER REFERENCES people(id),
             expense FLOAT,
-            currency_id INTEGER REFERENCES currencies(id)
+            currency_id INTEGER REFERENCES currencies(id),
+            date DATE,
+            is_resolved TEXT
         );
     `);
     
     console.log(data, "created");
+}
+
+interface PeopleTableTypes {
+    id: number, 
+    name: string, 
+    weight: number, 
+    trip_id: number
+}
+export async function addMembers(db: SQLiteDatabase, tripId: number) {
+    const peopleData = await getRelatedPeople(db, tripId) as PeopleTableTypes[];
+    console.log(peopleData);
+
+    for (let i = 0; i < peopleData.length; i++) {
+        await createMemberColumn(db, tripId, peopleData[i].id);
+        console.log("added", peopleData[i].name);
+    }
+}
+
+export async function createMemberColumn(db: SQLiteDatabase, tripId: number, personId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    let columnName: string = "person_" + personId.toString();
+
+    const data = await db.execAsync(`
+        ALTER TABLE ${tableName} ADD COLUMN ${columnName} INTEGER;
+    `);
+}
+
+export async function deleteMemberColumn(db: SQLiteDatabase, tripId: number, personId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    let columnName: string = "person_" + personId.toString();
+    console.log("For", tableName);
+
+    const data = await db.execAsync(`
+        ALTER TABLE ${tableName} DROP COLUMN ${columnName};
+    `)
+
+    console.log(data, "column deleted");
 }
