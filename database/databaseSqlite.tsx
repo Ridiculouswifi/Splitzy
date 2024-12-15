@@ -1,5 +1,5 @@
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
-import { openDatabaseSync, SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
+import { openDatabaseSync, SQLiteDatabase, SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 
 const database = openDatabaseSync("splitzy.db");
 
@@ -87,6 +87,13 @@ export async function getRelatedPeople(db: SQLiteDatabase, tripId: number) : Pro
     `, tripId);
 }
 
+export async function getPerson(db: SQLiteDatabase, id: number): Promise<unknown[]> {
+    return await db.getAllAsync(`
+        SELECT * FROM people
+        WHERE id = ?;    
+    `, id);
+}
+
 /* Functions for currencies table */
 export async function addToCurrencies(db: SQLiteDatabase, currencyName: string, 
     abbreviation: string, tripId: number): Promise<void> {
@@ -110,6 +117,13 @@ export async function getRelatedCurrencies(db: SQLiteDatabase, tripId: number): 
         SELECT * FROM currencies
         WHERE trip_id = ?;    
     `, tripId);
+}
+
+export async function getCurrency(db: SQLiteDatabase, id: number): Promise<unknown[]> {
+    return await db.getAllAsync(`
+        SELECT * FROM currencies
+        WHERE id = ?;
+    `, id);
 }
 
 /* Functions to store expenses */
@@ -193,6 +207,12 @@ export async function addExpense(db: SQLiteDatabase, tripId: number,
         }
         
         console.log("Expense added:", expenseId);
+}
+
+export async function deleteExpense(db: SQLiteDatabase, id: number, tripId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    
+    await db.runAsync(`DELETE FROM ${tableName} WHERE id = ?;`, id);
 }
 
 export async function getLatestExpenseId(db: SQLiteDatabase, tableName: string) {
