@@ -10,7 +10,7 @@ import { GenericButton2 } from "@/components/buttons";
 import Picker from "@ouroboros/react-native-picker";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
+import { addExpense, getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 
 type RouteTypes = RouteProp<ParamsList, "AddExpense">;
@@ -99,9 +99,10 @@ function MainBody({tripId}: {tripId: number}) {
         setPeople(oldData);
     }
 
-    function confirmExpense() {
+    async function confirmExpense() {
         console.log(expenseName, payerId, amount, currencyId, date);
         console.log(people);
+        await addExpense(db, tripId, expenseName, payerId, parseFloat(amount), currencyId, date, people);
     }
 
     useEffect(() => {

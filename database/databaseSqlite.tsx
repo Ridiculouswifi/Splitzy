@@ -170,3 +170,37 @@ export async function deleteMemberColumn(db: SQLiteDatabase, tripId: number, per
 
     console.log(data, "column deleted");
 }
+
+export async function addExpense(db: SQLiteDatabase, tripId: number,
+    expenseName: string, payerId: number, amount: number, currencyId: number, date: Date,
+    people: PeopleTableTypes[]) {
+        let tableName: string = "trip_" + tripId.toString();
+        await db.runAsync(`
+            INSERT INTO ${tableName} (name, payer_id, expense, currency_id, date, is_resolved)
+            VALUES(?, ?, ?, ?, ?, ?);
+        `, expenseName, payerId, amount, currencyId, date.toLocaleDateString(), false);
+
+        const expenseData =  await getLatestExpenseId(db, tableName) as {id: number}[];
+        const expenseId = expenseData[0].id;
+
+        for (let i = 0; i < people.length; i++) {
+            let columnName: string = "person_" + people[i].id.toString();
+            await db.runAsync(`
+                UPDATE ${tableName}
+                SET ${columnName} = ${people[i].weight}
+                WHERE id = ${expenseId}
+            `);
+        }
+        
+        console.log("Expense added:", expenseId);
+}
+
+export async function getLatestExpenseId(db: SQLiteDatabase, tableName: string) {
+    const data = await db.getAllAsync(`
+        SELECT id FROM ${tableName}
+        ORDER BY id DESC
+        LIMIT 1    
+    `)
+    console.log(data);
+    return data;
+}
