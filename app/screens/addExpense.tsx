@@ -209,7 +209,7 @@ function Details(props: detailsProps){
             setPayerPicker(props.peopleList[0].value);
             props.setPayerId(props.peopleList[0].value);
         }
-    }, [props.currencyList]);
+    }, [props.currencyList, props.peopleList]);
 
     return (
         <View style={detailsStyle.container}>
