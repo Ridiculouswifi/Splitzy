@@ -114,8 +114,6 @@ function DisplayExpenses({tripId}: {tripId: number}) {
     }, [db])
 
     useEffect(() => {
-        refetchItems();
-
         const unsubscribe = navigation.addListener('focus', () => {
             refetchItems();
         });

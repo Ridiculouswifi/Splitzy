@@ -14,6 +14,7 @@ import Trip from "./screens/trip";
 import AddTrip from "./screens/addTrip";
 import Expenses from "./screens/expenses";
 import AddExpense from "./screens/addExpense";
+import Overview from "./screens/overview";
 
 const Stack = createNativeStackNavigator<ParamsList>();
 const Tab = createBottomTabNavigator<ParamsList>();
@@ -26,10 +27,11 @@ export type ParamsList = {
     TabNavigator: { tripId: number };
     
     Home: undefined;
-    Details: { tripId: number }
+    Details: { tripId: number };
     AddTrip: undefined;
     Expenses: { tripId: number };
-    AddExpense: { tripId: number }
+    AddExpense: { tripId: number };
+    Overview: { tripId: number };
 }
 
 const db = openDatabaseSync("splitzy.db");
@@ -61,7 +63,7 @@ function TabNavigator() {
 
     return (
         <Tab.Navigator
-            initialRouteName="Details"
+            initialRouteName="Overview"
             screenOptions={{
                 headerShown: false,
                 animation: 'none',
@@ -71,14 +73,18 @@ function TabNavigator() {
             }}
         >
             <Tab.Screen
-                name="Details"
-                component={Trip}
+                name="Overview"
+                component={Overview}
                 initialParams={{tripId}}
-                
             />
             <Tab.Screen
                 name="Expenses"
                 component={Expenses}
+                initialParams={{tripId}}
+            />
+            <Tab.Screen
+                name="Details"
+                component={Trip}
                 initialParams={{tripId}}
             />
         </Tab.Navigator>
