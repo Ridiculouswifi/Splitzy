@@ -151,10 +151,11 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
 
     function confirmDelete() {
         deleteItem && deleteItem(id);
+        setIsVisible(false);
     }
 
     function goToTrip() {
-        navigation.navigate('Trip', { tripId: id });
+        navigation.navigate('TabNavigator', { tripId: id });
     }
 
     return (
@@ -222,6 +223,7 @@ function DisplayTrips() {
 
     const refetchItems = useCallback(() => {
         refetch();
+        console.log("Refetched");
     }, [db])
 
     useEffect(() => {
@@ -236,10 +238,10 @@ function DisplayTrips() {
     async function deleteItem(id: number) {
         console.log("Deleting:", id);
         await deleteTrip(db, id);
+        await refetchItems();
+
         await deleteRelatedPeople(db, id);
         await deleteRelatedCurrencies(db, id);
-
-        await refetchItems();
     }
 
     return (

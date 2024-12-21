@@ -1,0 +1,261 @@
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ParamsList } from "..";
+import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { GenericButton2 } from "@/components/buttons";
+import { HorizontalGap, VerticalGap } from "@/components/gap";
+import { useSQLiteContext } from "expo-sqlite";
+import { useCallback, useEffect, useState } from "react";
+import { ConfirmDelete } from "@/components/confirmDelete";
+import { Ionicons } from "@expo/vector-icons";
+import { deleteExpense, getCurrency, getPerson } from "@/database/databaseSqlite";
+
+type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Expenses">;
+type RouteTypes = RouteProp<ParamsList, "Expenses">;
+
+const windowHeight = Dimensions.get('window').height;
+const windowWidth = Dimensions.get('window').width;
+
+export default function Expenses() {
+    const route = useRoute<RouteTypes>();
+    const { tripId } = route.params;
+    
+    const insets = useSafeAreaInsets();
+
+    const tripStyles = StyleSheet.create({
+        container: {
+            paddingTop: insets.top,
+            backgroundColor: 'skyblue',
+            flex: 1,
+        }
+    })
+    return (
+        <View style={tripStyles.container}>
+            <StatusBar barStyle={'dark-content'}/>
+            <TopSection title="Trip"/>
+            <MainBody tripId={tripId}/>
+        </View>
+    )
+}
+
+function MainBody({tripId}: {tripId: number}) {
+    const navigation = useNavigation<NativeStackNavigatorTypes>();
+    
+    const mainBodyStyles = StyleSheet.create({
+        expenseContainer: {
+            flexDirection: 'row',
+            paddingHorizontal: 20,
+            paddingVertical: 15,
+            borderRadius: 15,
+            borderBottomColor: 'darkgrey',
+            borderBottomWidth: 2,
+            width: windowWidth,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+    })
+    
+    function goToAddExpense() {
+        navigation.navigate("AddExpense", {tripId: tripId});
+    }
+
+    return (
+        <View style={genericMainBodyStyles.outerContainer}>
+            <View style={mainBodyStyles.expenseContainer}>
+                <GenericButton2 text="New Expense" colour="dodgerblue"
+                    height={50} width={300}
+                    fontsize={25} action={goToAddExpense}/>
+            </View>
+            <DisplayExpenses tripId={tripId}/>
+        </View>
+    )
+}
+
+interface ExpenseEntity {
+    id: number;
+    name: string;
+    payer_id: number;
+    expense: number;
+    currency_id: number;
+    date: string;
+    is_resolved: string;
+}
+const displayExpensesStyles = StyleSheet.create({
+    container: {
+        flex: 1,
+        width: windowWidth,
+    },
+    internalContainer: {
+        alignItems: 'center',
+    },
+})
+function DisplayExpenses({tripId}: {tripId: number}) {
+    const db = useSQLiteContext ();
+    const navigation = useNavigation<NativeStackNavigatorTypes>();
+    const [expenses, setExpenses] = useState<ExpenseEntity[]>([]);
+
+    const tableName: string = "trip_" + tripId.toString();
+
+    async function refetch(){
+        await db.withExclusiveTransactionAsync(async () => {
+            setExpenses(
+                await db.getAllAsync<ExpenseEntity>(
+                    `SELECT * FROM ${tableName} ORDER BY date ASC`
+                )
+            );
+        });
+    }
+
+    const refetchItems = useCallback(() => {
+        refetch();
+        console.log("Refetched");
+    }, [db])
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            refetchItems();
+        });
+        return unsubscribe;
+    }, [navigation]);
+
+    async function deleteItem(id: number, tripId: number) {
+        console.log("Deleting:", id);
+        await deleteExpense(db, id, tripId);
+        await refetchItems();
+    }
+    
+    return (
+        <ScrollView style={displayExpensesStyles.container}>
+            <View style={displayExpensesStyles.internalContainer}>
+                {expenses.map((expense) => (
+                    <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={tripId}/>
+                ))}
+                <VerticalGap height={40}/>
+            </View>
+        </ScrollView>
+    )
+}
+
+interface PeopleTableTypes {
+    id: number,
+    name: string,
+    weight: number,
+    trip_id: number,
+}
+interface CurrencyTableTypes {
+    id: number,
+    currency_name: string,
+    abbreviation: string,
+    trip_id: number
+}
+const expenseStyles = StyleSheet.create({
+    container: {
+        height: 120,
+        width: 0.95 * windowWidth,
+        borderRadius: 10,
+        paddingHorizontal: 20, 
+        paddingVertical: 10,
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowColor: '#000',
+        borderWidth: 0.1,
+        backgroundColor: 'whitesmoke',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    textContainer: {
+        
+    },
+    rightContainer: {
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+    },
+    expenseName: {
+        fontSize: 25,
+        fontWeight: '600',
+    },
+    payer: {
+        fontSize: 17,
+    },
+    date: {
+        fontSize: 15,
+    },
+    amount: {
+        fontSize: 25,
+        fontWeight: '600',
+    },
+    abbreviation: {
+        fontSize: 15,
+        fontWeight: '500'
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+    },
+})
+function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpense: (id: number, tripId: number) => void | Promise<void>, tripId: number}) {
+    const db = useSQLiteContext ();
+
+    const [isVisible, setIsVisible] = useState<boolean>(false);
+    const [payer, setPayer] = useState<string>('');
+    const [abbreviation, setAbbreviation] = useState<string>('');
+
+    async function getText() {
+        const payerData = await getPerson(db, item.payer_id) as PeopleTableTypes[];
+        setPayer(payerData[0].name);
+
+        const currencyData = await getCurrency(db, item.currency_id) as CurrencyTableTypes[];
+        setAbbreviation(currencyData[0].abbreviation);
+    }
+
+    useEffect(() => {
+        getText();
+    }, [])
+
+    function pressDelete() {
+        setIsVisible(true);
+    }
+
+    function confirmDelete() {
+        deleteExpense && deleteExpense(item.id, tripId);
+        setIsVisible(false);
+    }
+
+    function resolved() {
+
+    }
+    
+    return (
+        <View>
+            <VerticalGap key={item.id} height={10}/>
+            <TouchableOpacity style={expenseStyles.container} activeOpacity={0.4}>
+                <View style={expenseStyles.textContainer}>
+                    <Text style={expenseStyles.expenseName}>{item.name}</Text>
+                    <VerticalGap height={5}/>
+                    <Text style={expenseStyles.payer}>By: {payer}</Text>
+                    <VerticalGap height={10}/>
+                    <Text style={expenseStyles.date}>{item.date}</Text>
+                </View>
+                <View style={expenseStyles.rightContainer}>
+                    <View style={expenseStyles.buttonsContainer}>
+                        <GenericButton2 text="Resolved" height={30} width={80} fontsize={14}
+                            colour="dodgerblue" action={resolved}/>
+                        <HorizontalGap width={10}/>
+                        <TouchableOpacity onPress={pressDelete}>
+                            <Ionicons name="trash-outline" size={28} color="red"/>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Text style={expenseStyles.amount}>{item.expense}</Text>
+                        <Text style={expenseStyles.abbreviation}> {abbreviation}</Text>
+                    </View>
+                    <VerticalGap height={1}/>
+                </View>
+            </TouchableOpacity>
+            <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
+        </View>
+    )
+}

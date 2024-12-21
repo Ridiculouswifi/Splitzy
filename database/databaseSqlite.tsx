@@ -1,4 +1,7 @@
-import { SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
+import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
+import { openDatabaseSync, SQLiteDatabase, SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
+
+const database = openDatabaseSync("splitzy.db");
 
 export async function createTables(db: SQLiteDatabase) {
     await db.execAsync(`
@@ -29,6 +32,7 @@ export async function createTables(db: SQLiteDatabase) {
     console.log("Tables Created");
 };
 
+/* Functions for trips table */
 export async function addToTrips(db: SQLiteDatabase, 
     tripName: string, location: string, 
     startDate: Date, endDate: Date): Promise<void> {
@@ -41,6 +45,11 @@ export async function addToTrips(db: SQLiteDatabase,
 
 export async function deleteTrip(db: SQLiteDatabase, id: number): Promise<void> {
     await db.runAsync(`DELETE FROM trips WHERE id = ?;`, id);
+
+    let tableName: string = "trip_" + id.toString();
+    const data = await db.execAsync(`DROP TABLE ${tableName};`);
+
+    console.log(data, "Deleted");
 }
 
 export async function getLatestTripId(db: SQLiteDatabase): Promise<unknown[]> {
@@ -53,6 +62,7 @@ export async function getLatestTripId(db: SQLiteDatabase): Promise<unknown[]> {
     return data;
 }
 
+/* Functions for people table */
 export async function addToPeople(db: SQLiteDatabase, name: string, 
     weight: number, tripId: number): Promise<void> {
         await db.runAsync(`
@@ -77,6 +87,14 @@ export async function getRelatedPeople(db: SQLiteDatabase, tripId: number) : Pro
     `, tripId);
 }
 
+export async function getPerson(db: SQLiteDatabase, id: number): Promise<unknown[]> {
+    return await db.getAllAsync(`
+        SELECT * FROM people
+        WHERE id = ?;    
+    `, id);
+}
+
+/* Functions for currencies table */
 export async function addToCurrencies(db: SQLiteDatabase, currencyName: string, 
     abbreviation: string, tripId: number): Promise<void> {
         await db.runAsync(`
@@ -99,4 +117,110 @@ export async function getRelatedCurrencies(db: SQLiteDatabase, tripId: number): 
         SELECT * FROM currencies
         WHERE trip_id = ?;    
     `, tripId);
+}
+
+export async function getCurrency(db: SQLiteDatabase, id: number): Promise<unknown[]> {
+    return await db.getAllAsync(`
+        SELECT * FROM currencies
+        WHERE id = ?;
+    `, id);
+}
+
+/* Functions to store expenses */
+export async function createTrip(db: SQLiteDatabase, tripId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    const sanitizedTableName = tableName.replace(/[^a-zA-Z0-9_]/g, ''); // Removes characters that can cause SQL injection
+
+    const data = await db.execAsync(`
+        PRAGMA journal_mode = WAL;
+        
+        CREATE TABLE IF NOT EXISTS ${sanitizedTableName} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            payer_id INTEGER REFERENCES people(id),
+            expense FLOAT,
+            currency_id INTEGER REFERENCES currencies(id),
+            date DATE,
+            is_resolved TEXT
+        );
+    `);
+    
+    console.log(data, "created");
+}
+
+interface PeopleTableTypes {
+    id: number, 
+    name: string, 
+    weight: number, 
+    trip_id: number
+}
+export async function addMembers(db: SQLiteDatabase, tripId: number) {
+    const peopleData = await getRelatedPeople(db, tripId) as PeopleTableTypes[];
+    console.log(peopleData);
+
+    for (let i = 0; i < peopleData.length; i++) {
+        await createMemberColumn(db, tripId, peopleData[i].id);
+        console.log("added", peopleData[i].name);
+    }
+}
+
+export async function createMemberColumn(db: SQLiteDatabase, tripId: number, personId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    let columnName: string = "person_" + personId.toString();
+
+    const data = await db.execAsync(`
+        ALTER TABLE ${tableName} ADD COLUMN ${columnName} INTEGER;
+    `);
+}
+
+export async function deleteMemberColumn(db: SQLiteDatabase, tripId: number, personId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    let columnName: string = "person_" + personId.toString();
+    console.log("For", tableName);
+
+    const data = await db.execAsync(`
+        ALTER TABLE ${tableName} DROP COLUMN ${columnName};
+    `)
+
+    console.log(data, "column deleted");
+}
+
+export async function addExpense(db: SQLiteDatabase, tripId: number,
+    expenseName: string, payerId: number, amount: number, currencyId: number, date: Date,
+    people: PeopleTableTypes[]) {
+        let tableName: string = "trip_" + tripId.toString();
+        await db.runAsync(`
+            INSERT INTO ${tableName} (name, payer_id, expense, currency_id, date, is_resolved)
+            VALUES(?, ?, ?, ?, ?, ?);
+        `, expenseName, payerId, amount, currencyId, date.toLocaleDateString(), false);
+
+        const expenseData =  await getLatestExpenseId(db, tableName) as {id: number}[];
+        const expenseId = expenseData[0].id;
+
+        for (let i = 0; i < people.length; i++) {
+            let columnName: string = "person_" + people[i].id.toString();
+            await db.runAsync(`
+                UPDATE ${tableName}
+                SET ${columnName} = ${people[i].weight}
+                WHERE id = ${expenseId}
+            `);
+        }
+        
+        console.log("Expense added:", expenseId);
+}
+
+export async function deleteExpense(db: SQLiteDatabase, id: number, tripId: number) {
+    let tableName: string = "trip_" + tripId.toString();
+    
+    await db.runAsync(`DELETE FROM ${tableName} WHERE id = ?;`, id);
+}
+
+export async function getLatestExpenseId(db: SQLiteDatabase, tableName: string) {
+    const data = await db.getAllAsync(`
+        SELECT id FROM ${tableName}
+        ORDER BY id DESC
+        LIMIT 1    
+    `)
+    console.log(data);
+    return data;
 }
