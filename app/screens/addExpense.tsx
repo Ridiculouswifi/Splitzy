@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { addExpense, getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
+import { Colours } from "@/components/colours";
 
 type RouteTypes = RouteProp<ParamsList, "AddExpense">;
 
@@ -27,13 +28,13 @@ export default function AddExpense() {
     const tripStyles = StyleSheet.create({
         container: {
             paddingTop: insets.top,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             flex: 1,
         }
     })
     return (
         <View style={tripStyles.container}>
-            <StatusBar barStyle={'dark-content'}/>
+            <StatusBar barStyle={'light-content'}/>
             <TopSection title="Add Expense"/>
             <MainBody tripId={tripId}/>
         </View>
@@ -142,7 +143,7 @@ function MainBody({tripId}: {tripId: number}) {
                 text="Confirm" 
                 height={45} 
                 width={210} 
-                colour="dodgerblue" 
+                colour={Colours.confirmButton} 
                 action={confirmExpense}
                 fontsize={22}/>
             
@@ -172,6 +173,7 @@ const detailsStyle = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         alignSelf: 'flex-start',
+        color: Colours.textColor,
     },
     miniContainer: {
         flexDirection: 'row',
@@ -182,6 +184,7 @@ const detailsStyle = StyleSheet.create({
     payerTitle: {
         fontSize: 15,
         fontWeight: '500',
+        color: Colours.textColor,
     },
     pickerContainer: {
         width: 0.25 * windowWidth,
@@ -192,6 +195,7 @@ const detailsStyle = StyleSheet.create({
     picker: {
         fontSize: 20,
         width: 0.20 * windowWidth,
+        color: Colours.textColor,
     },
 })
 function Details(props: detailsProps){
@@ -228,7 +232,7 @@ function Details(props: detailsProps){
                         options={props.peopleList}
                         value={payerPicker}
                         style={[detailsStyle.picker, {width: 0.65 * windowWidth}]}/>
-                    <Ionicons name="caret-down-outline" size={20}/>
+                    <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
                 </View>
             </View>
             <VerticalGap height={20}/>
@@ -244,7 +248,7 @@ function Details(props: detailsProps){
                         value={currencyPicker}
                         style={detailsStyle.picker}
                     />
-                    <Ionicons name="caret-down-outline" size={20}/>
+                    <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
                 </View>
             </View>
             <VerticalGap height={20}/>
@@ -261,7 +265,7 @@ interface inputProps {
 const inputStyles = StyleSheet.create({
     inputField: {
         borderBottomWidth: 2,
-        borderColor: 'grey',
+        borderColor: Colours.inputField,
         color: 'black',
         fontSize: 20,
     }
@@ -270,7 +274,7 @@ function Input({setVariable, variablePlaceHolder, width}: inputProps) {
     return (
         <TextInput 
             placeholder={variablePlaceHolder}
-            placeholderTextColor="grey"
+            placeholderTextColor={Colours.placeholder}
             style={[inputStyles.inputField, {width: width}]}
             onChangeText={setVariable}/>
     )
@@ -287,7 +291,7 @@ function DateInput({ setVariable, variablePlaceHolder }: DateInputProps) {
     const inputMiniStyles = StyleSheet.create({
         inputField: {
             width: 0.8 * windowWidth,
-            color: 'black',
+            color: Colours.textColor,
             fontSize: 20,
             flexDirection: 'row',
             alignItems: 'center',
@@ -295,6 +299,7 @@ function DateInput({ setVariable, variablePlaceHolder }: DateInputProps) {
         inputTitle: {
             fontSize: 15,
             fontWeight: '500',
+            color: Colours.textColor,
         }
     })
 
@@ -327,6 +332,7 @@ const displayMembersStyles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: 'bold',
+        color: Colours.textColor
     },
     miniContainer: {
         flexDirection: 'row',
@@ -373,9 +379,10 @@ const memberStyles = StyleSheet.create({
         borderColor: 'grey',
         fontSize: 20,
         width: 0.23 * windowWidth,
+        color: Colours.textColor,
     },
     nameField: {
-        backgroundColor: 'lightgrey',
+        backgroundColor: Colours.backgroundV2,
         width: 0.48 * windowWidth,
         height: 40,
         justifyContent: 'center',
@@ -384,6 +391,7 @@ const memberStyles = StyleSheet.create({
     },
     name: {
         fontSize: 20,
+        color: Colours.textColor,
     }
 })
 function Member(props: memberProps) {
@@ -399,7 +407,8 @@ function Member(props: memberProps) {
                     onChangeText={(newWeight) => {
                         setWeight(newWeight);
                         props.updatePeople(props.memberId, newWeight);
-                    }}/>
+                    }}
+                    keyboardType="numeric"/>
             </View>
             <VerticalGap height={10}/>
         </View>

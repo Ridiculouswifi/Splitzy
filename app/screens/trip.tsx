@@ -7,6 +7,7 @@ import { RouteProp, useRoute } from "@react-navigation/native";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
+import { Colours } from "@/components/colours";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Details">;
 type RouteTypes = RouteProp<ParamsList, "Details">;
@@ -22,13 +23,13 @@ export default function Trip() {
     const tripStyles = StyleSheet.create({
         container: {
             paddingTop: insets.top,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             flex: 1,
         }
     })
     return (
         <View style={tripStyles.container}>
-            <StatusBar barStyle={'dark-content'}/>
+            <StatusBar barStyle={'light-content'}/>
             <TopSection title="Trip"/>
             <MainBody tripId={tripId}/>
         </View>

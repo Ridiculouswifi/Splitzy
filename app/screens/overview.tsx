@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
+import { Colours } from "@/components/colours";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Overview">;
 type RouteTypes = RouteProp<ParamsList, "Overview">;
@@ -24,13 +25,13 @@ export default function Overview() {
     const tripStyles = StyleSheet.create({
         container: {
             paddingTop: insets.top,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             flex: 1,
         }
     })
     return (
         <View style={tripStyles.container}>
-            <StatusBar barStyle={'dark-content'}/>
+            <StatusBar barStyle={'light-content'}/>
             <TopSection title="Trip"/>
             <MainBody tripId={tripId}/>
         </View>
@@ -135,6 +136,7 @@ const paidForStyles = StyleSheet.create({
     title: {
         fontSize: 23,
         fontWeight: 'bold',
+        color: Colours.textColor,
     },
 })
 function PaidFor(props: PaidForProps) {    
@@ -171,7 +173,7 @@ const paidForPayerStyles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     nameContainer: {
-        backgroundColor: 'lightgrey',
+        backgroundColor: Colours.backgroundV2,
         width: 0.35 * windowWidth,
         height: 40,
         justifyContent: 'center',
@@ -180,6 +182,7 @@ const paidForPayerStyles = StyleSheet.create({
     },
     name: {
         fontSize: 20,  
+        color: Colours.textColor,
     },
     amountContainer: {
         alignItems: 'flex-end',
@@ -244,10 +247,12 @@ const expenseStyles = StyleSheet.create({
     amount: {
         fontSize: 25,
         fontWeight: '600',
+        color: Colours.textColor,
     },
     abbreviation: {
         fontSize: 15,
-        fontWeight: '500'
+        fontWeight: '500',
+        color: Colours.textColor,
     },
 })
 function Expense(props: ExpenseProps) {
@@ -263,6 +268,7 @@ function Differential(props: PaidForProps) {
     return (
         <View style={paidForStyles.container}>
             <Text style={paidForStyles.title}>Difference</Text>
+            <VerticalGap height={10}/>
             {props.people.map((person) => (
                 <PaidForPayer 
                     key={person.id}

@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { Ionicons } from "@expo/vector-icons";
 import { deleteExpense, getCurrency, getPerson } from "@/database/databaseSqlite";
+import { Colours } from "@/components/colours";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Expenses">;
 type RouteTypes = RouteProp<ParamsList, "Expenses">;
@@ -27,13 +28,13 @@ export default function Expenses() {
     const tripStyles = StyleSheet.create({
         container: {
             paddingTop: insets.top,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             flex: 1,
         }
     })
     return (
         <View style={tripStyles.container}>
-            <StatusBar barStyle={'dark-content'}/>
+            <StatusBar barStyle={'light-content'}/>
             <TopSection title="Trip"/>
             <MainBody tripId={tripId}/>
         </View>
@@ -49,7 +50,7 @@ function MainBody({tripId}: {tripId: number}) {
             paddingHorizontal: 20,
             paddingVertical: 15,
             borderRadius: 15,
-            borderBottomColor: 'darkgrey',
+            borderBottomColor: Colours.border,
             borderBottomWidth: 2,
             width: windowWidth,
             alignItems: 'center',
@@ -64,7 +65,7 @@ function MainBody({tripId}: {tripId: number}) {
     return (
         <View style={genericMainBodyStyles.outerContainer}>
             <View style={mainBodyStyles.expenseContainer}>
-                <GenericButton2 text="New Expense" colour="dodgerblue"
+                <GenericButton2 text="New Expense" colour={Colours.confirmButton}
                     height={50} width={300}
                     fontsize={25} action={goToAddExpense}/>
             </View>
@@ -162,7 +163,7 @@ const expenseStyles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowColor: '#000',
         borderWidth: 0.1,
-        backgroundColor: 'whitesmoke',
+        backgroundColor: Colours.backgroundV2,
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
@@ -176,20 +177,25 @@ const expenseStyles = StyleSheet.create({
     expenseName: {
         fontSize: 25,
         fontWeight: '600',
+        color: Colours.textColor,
     },
     payer: {
         fontSize: 17,
+        color: Colours.textColor,
     },
     date: {
         fontSize: 15,
+        color: Colours.textColor,
     },
     amount: {
         fontSize: 25,
         fontWeight: '600',
+        color: Colours.textColor,
     },
     abbreviation: {
         fontSize: 15,
-        fontWeight: '500'
+        fontWeight: '500',
+        color: Colours.textColor,
     },
     buttonsContainer: {
         flexDirection: 'row',
@@ -242,10 +248,10 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
                 <View style={expenseStyles.rightContainer}>
                     <View style={expenseStyles.buttonsContainer}>
                         <GenericButton2 text="Resolved" height={30} width={80} fontsize={14}
-                            colour="dodgerblue" action={resolved}/>
+                            colour={Colours.confirmButton} action={resolved}/>
                         <HorizontalGap width={10}/>
                         <TouchableOpacity onPress={pressDelete}>
-                            <Ionicons name="trash-outline" size={28} color="red"/>
+                            <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
                         </TouchableOpacity>
                     </View>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Colours } from "./colours";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList>;
 
@@ -15,7 +16,7 @@ export function TopSection({title}: {title: string}) {
     const topSectionStyles = StyleSheet.create({
         container: {
             paddingHorizontal: 40,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             height: 0.09 * windowHeight,
             justifyContent: 'center',
             alignItems: 'center',
@@ -30,6 +31,9 @@ export function TopSection({title}: {title: string}) {
         titleMessage: {
             fontSize: 35 / windowFontScale,
             fontWeight: 'bold',
+            color: Colours.textColor,
+            shadowOpacity: 0.1,
+            shadowColor: '#000',
         },
     })
     
@@ -41,7 +45,7 @@ export function TopSection({title}: {title: string}) {
         <View style={topSectionStyles.container}>
             <View style={topSectionStyles.horizontalContainer}>
                 <TouchableOpacity onPress={returnHome}>
-                    <Ionicons name="chevron-back-outline" size={35}/>
+                    <Ionicons name="chevron-back-outline" size={35} color={Colours.genericIcon}/>
                 </TouchableOpacity>
                 <Text style={topSectionStyles.titleMessage}>{title}</Text>
                 <View style={{width: 35}}></View>
@@ -53,14 +57,14 @@ export function TopSection({title}: {title: string}) {
 export const genericMainBodyStyles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'whitesmoke',
+        backgroundColor: Colours.background,
         alignItems: 'center',
         width: windowWidth - 30,
         paddingTop: 15,
     },
     outerContainer: {
         flex: 1,
-        backgroundColor: 'whitesmoke',
+        backgroundColor: Colours.background,
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
         shadowColor: "#000",
