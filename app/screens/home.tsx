@@ -8,7 +8,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
-import { GenericButton2 } from "@/components/buttons";
+import { GenericButton } from "@/components/buttons";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { Colours } from "@/components/colours";
 
@@ -182,10 +182,14 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
                 <View>
                     <View style={{flexDirection: 'row'}}>
                         <TouchableOpacity>
-                            <GenericButton2 
-                                text="Edit" colour={Colours.confirmButton} 
-                                height={30} width={45} 
-                                action={editTrip} fontsize={14} />
+                            <GenericButton
+                                text="Edit" 
+                                colour={Colours.confirmButton} 
+                                textColour={Colours.textColor}
+                                height={30} 
+                                width={45} 
+                                action={editTrip} 
+                                fontsize={14} />
                         </TouchableOpacity>
                         <HorizontalGap width={8}/>
                         <TouchableOpacity onPress={pressDelete}>

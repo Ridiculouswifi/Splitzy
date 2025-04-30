@@ -169,7 +169,7 @@ export async function createMemberColumn(db: SQLiteDatabase, tripId: number, per
     let columnName: string = "person_" + personId.toString();
 
     const data = await db.execAsync(`
-        ALTER TABLE ${tableName} ADD COLUMN ${columnName} INTEGER;
+        ALTER TABLE ${tableName} ADD COLUMN ${columnName} FLOAT;
     `);
 }
 
@@ -223,4 +223,14 @@ export async function getLatestExpenseId(db: SQLiteDatabase, tableName: string) 
     `)
     console.log(data);
     return data;
+}
+
+export async function updateExpenseStatus(db: SQLiteDatabase, id: number, tripId: number, status: string) {
+    let tableName: string = "trip_" + tripId.toString();
+
+    await db.runAsync(`
+        UPDATE ${tableName}
+        SET is_resolved = ${status}
+        WHERE id = ${id}
+    `);
 }

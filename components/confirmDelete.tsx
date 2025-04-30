@@ -1,7 +1,8 @@
 import { Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GenericButton, GenericButton2 } from "./buttons";
+import { GenericButton } from "./buttons";
 import { HorizontalGap } from "./gap";
+import { Colours } from "./colours";
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -24,7 +25,7 @@ const confirmDeleteStyles = StyleSheet.create({
         height: 150,
         width: 350,
         paddingVertical: 20,
-        backgroundColor: 'whitesmoke',
+        backgroundColor: Colours.background,
         alignItems: 'center',
         justifyContent: 'space-between',
         borderRadius: 15,
@@ -36,6 +37,7 @@ const confirmDeleteStyles = StyleSheet.create({
     text: {
         fontSize: 27,
         fontWeight: 'bold',
+        color: Colours.textColor,
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -57,13 +59,24 @@ export function ConfirmDelete({isVisible, setIsVisible, confirm}: confirmDeleteP
                 <View style={confirmDeleteStyles.container}>
                     <Text style={confirmDeleteStyles.text}>Confirm Delete?</Text>
                     <View style={confirmDeleteStyles.buttonContainer}>
-                        <GenericButton2 text="Confirm" height={50}
-                            width={150} colour="red"
-                            action={confirm} fontsize={20}/>
+                        <GenericButton 
+                            text="Confirm" 
+                            height={50}
+                            width={150} 
+                            colour={Colours.cancel}
+                            action={confirm} 
+                            fontsize={20}
+                            textColour={Colours.textColor}
+                            />
                         <HorizontalGap width={10}/>
-                        <GenericButton text="Cancel" height={50}
-                            width={150} colour="whitesmoke"
-                            action={cancel} fontsize={20}/>
+                        <GenericButton 
+                            text="Cancel" 
+                            height={50}
+                            width={150} 
+                            colour={Colours.backgroundV2}
+                            action={cancel} 
+                            fontsize={20}
+                            textColour={Colours.textColor}/>
                     </View>
                 </View>
             </View>

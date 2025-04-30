@@ -6,7 +6,7 @@ import { ParamsList } from "..";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { useCallback, useEffect, useState } from "react";
 import { Currency } from "@/classes/currency";
-import { GenericButton2 } from "@/components/buttons";
+import { GenericButton } from "@/components/buttons";
 import Picker from "@ouroboros/react-native-picker";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -94,7 +94,7 @@ function MainBody({tripId}: {tripId: number}) {
         const oldData = people;
         for (let i = 0; i < oldData.length; i++) {
             if (oldData[i].id == id) {
-                oldData[i].weight = parseInt(newWeight);
+                oldData[i].weight = parseFloat(newWeight);
             }
         }
         setPeople(oldData);
@@ -139,11 +139,12 @@ function MainBody({tripId}: {tripId: number}) {
             <Divider/>
             <VerticalGap height={20}/>
 
-            <GenericButton2 
+            <GenericButton
                 text="Confirm" 
                 height={45} 
                 width={210} 
                 colour={Colours.confirmButton} 
+                textColour={Colours.textColor}
                 action={confirmExpense}
                 fontsize={22}/>
             
@@ -266,7 +267,7 @@ const inputStyles = StyleSheet.create({
     inputField: {
         borderBottomWidth: 2,
         borderColor: Colours.inputField,
-        color: 'black',
+        color: Colours.textColor,
         fontSize: 20,
     }
 })
@@ -406,7 +407,7 @@ function Member(props: memberProps) {
                 <TextInput style={memberStyles.field} value={weight}
                     onChangeText={(newWeight) => {
                         setWeight(newWeight);
-                        props.updatePeople(props.memberId, newWeight);
+                        props.updatePeople(props.memberId, (newWeight == "") ? "0" : newWeight);
                     }}
                     keyboardType="numeric"/>
             </View>
