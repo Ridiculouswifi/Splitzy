@@ -114,8 +114,8 @@ function MainBody({tripId}: {tripId: number}) {
 
     return (
         <View style={genericMainBodyStyles.outerContainer}>
-        <ScrollView>
-        <View style={genericMainBodyStyles.container}>
+        <ScrollView style={{width: windowWidth}}>
+        <View style={{alignItems: 'center'}}>
             {(!isLoading) && 
             <View style={genericMainBodyStyles.container}>
                 <Statistics people={people} compilation={totalSpent} title="Total Paid"/>
