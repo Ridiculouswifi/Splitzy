@@ -183,9 +183,13 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
                     <View style={{flexDirection: 'row'}}>
                         <TouchableOpacity>
                             <GenericButton2 
-                                text="Edit" colour={Colours.confirmButton} 
-                                height={30} width={45} 
-                                action={editTrip} fontsize={14} />
+                                text="Edit" 
+                                colour={Colours.confirmButton} 
+                                textColour={Colours.textColor}
+                                height={30} 
+                                width={45} 
+                                action={editTrip} 
+                                fontsize={14} />
                         </TouchableOpacity>
                         <HorizontalGap width={8}/>
                         <TouchableOpacity onPress={pressDelete}>

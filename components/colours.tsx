@@ -14,4 +14,5 @@ export const Colours = {
     inputField: 'grey',
     placeholder: 'dimgrey',
     greenButton: 'limegreen', 
+    textColorLightButton: 'black',
 }

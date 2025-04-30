@@ -144,6 +144,7 @@ function MainBody({tripId}: {tripId: number}) {
                 height={45} 
                 width={210} 
                 colour={Colours.confirmButton} 
+                textColour={Colours.textColor}
                 action={confirmExpense}
                 fontsize={22}/>
             

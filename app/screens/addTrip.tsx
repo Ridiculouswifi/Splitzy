@@ -163,6 +163,7 @@ function MainBody() {
                 height={45} 
                 width={210} 
                 colour={Colours.confirmButton}
+                textColour={Colours.textColor}
                 action={confirmDetails}
                 fontsize={22}/>
             
@@ -309,8 +310,14 @@ function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeig
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Members</Text>
                 <HorizontalGap width={15}/>
-                <GenericButton text="Add" height={35} width={55} 
-                    colour={Colours.greenButton} action={addPerson} fontsize={15}/>
+                <GenericButton 
+                    text="Add" 
+                    height={35} 
+                    width={55} 
+                    colour={Colours.greenButton} 
+                    action={addPerson} 
+                    fontsize={15}
+                    textColour={Colours.textColorLightButton}/>
             </View>
             <VerticalGap height={20}/>
             {people.map((person, index) => (
@@ -419,8 +426,14 @@ function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurre
             <View style={membersStyles.miniContainer}>
                 <Text style={membersStyles.title}>Currencies</Text>
                 <HorizontalGap width={15}/>
-                <GenericButton text="Add" height={35} width={55} 
-                    colour="limegreen" action={addCurrency} fontsize={15}/>
+                <GenericButton 
+                    text="Add" 
+                    height={35} 
+                    width={55} 
+                    colour={Colours.greenButton} 
+                    action={addCurrency} 
+                    fontsize={15}
+                    textColour={Colours.textColorLightButton}/>
             </View>
             <VerticalGap height={20}/>
             {currencies.map((currency, index) => (

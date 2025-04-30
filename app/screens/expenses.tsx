@@ -65,9 +65,14 @@ function MainBody({tripId}: {tripId: number}) {
     return (
         <View style={genericMainBodyStyles.outerContainer}>
             <View style={mainBodyStyles.expenseContainer}>
-                <GenericButton2 text="New Expense" colour={Colours.confirmButton}
-                    height={50} width={300}
-                    fontsize={25} action={goToAddExpense}/>
+                <GenericButton2 
+                    text="New Expense" 
+                    colour={Colours.confirmButton}
+                    textColour={Colours.textColor}
+                    height={50} 
+                    width={300}
+                    fontsize={25} 
+                    action={goToAddExpense}/>
             </View>
             <DisplayExpenses tripId={tripId}/>
         </View>
@@ -247,8 +252,14 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
                 </View>
                 <View style={expenseStyles.rightContainer}>
                     <View style={expenseStyles.buttonsContainer}>
-                        <GenericButton2 text="Resolved" height={30} width={80} fontsize={14}
-                            colour={Colours.confirmButton} action={resolved}/>
+                        <GenericButton2 
+                            text="Resolved" 
+                            height={30} 
+                            width={80} 
+                            fontsize={14}
+                            colour={Colours.confirmButton} 
+                            action={resolved} 
+                            textColour={Colours.textColor}/>
                         <HorizontalGap width={10}/>
                         <TouchableOpacity onPress={pressDelete}>
                             <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
