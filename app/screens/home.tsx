@@ -10,6 +10,7 @@ import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
 import { GenericButton2 } from "@/components/buttons";
 import { ConfirmDelete } from "@/components/confirmDelete";
+import { Colours } from "@/components/colours";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -22,13 +23,13 @@ export default function Home() {
     const homeStyles = StyleSheet.create({
         container: {
             paddingTop: insets.top,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             flex: 1,
         }
     })
     return (
         <View style={homeStyles.container}>
-            <StatusBar barStyle={'dark-content'}/>
+            <StatusBar barStyle={'light-content'}/>
             <TopSection/>
             <MainBody/>
         </View>
@@ -39,13 +40,16 @@ function TopSection() {
     const topSectionStyles = StyleSheet.create({
         container: {
             paddingHorizontal: 40,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             height: 0.1 * windowHeight,
             justifyContent: 'center',
         },
         titleMessage: {
             fontSize: 45 / windowFontScale,
             fontWeight: 'bold',
+            color: 'white',
+            shadowOpacity: 0.1,
+            shadowColor: '#000',
         },
     })
     return (
@@ -60,7 +64,7 @@ function MainBody() {
     const mainBodyStyles = StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: 'whitesmoke',
+            backgroundColor: Colours.background, // Dark Gray (Not the same as in reference)
             borderTopLeftRadius: 15,
             borderTopRightRadius: 15,
             paddingTop: 15,
@@ -74,7 +78,7 @@ function MainBody() {
             flexDirection: 'row',
             paddingHorizontal: 20,
             borderRadius: 15,
-            borderBottomColor: 'darkgrey',
+            borderBottomColor: Colours.border,
             borderBottomWidth: 2,
             height: 0.07 * windowHeight,
             alignItems: 'center',
@@ -82,7 +86,8 @@ function MainBody() {
         },
         titleText: {
             fontSize: 30 / windowFontScale,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            color: Colours.textColor,
         },
     })
 
@@ -95,7 +100,7 @@ function MainBody() {
             <View style={mainBodyStyles.tripContainer}>
                 <Text style={mainBodyStyles.titleText}>Trips</Text>
                 <TouchableOpacity onPress={pressAddTrip}>
-                    <Ionicons name='add-outline' size={30} color='black'/>
+                    <Ionicons name='add-outline' size={30} color={Colours.genericIcon}/>
                 </TouchableOpacity>
             </View>
             <DisplayTrips/>
@@ -111,12 +116,12 @@ const tripStyles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: 20, 
         paddingVertical: 10,
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.6,
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 1 },
         shadowColor: '#000',
         borderWidth: 0.1,
-        backgroundColor: 'whitesmoke',
+        backgroundColor: '#3C3E4B',
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
@@ -126,12 +131,15 @@ const tripStyles = StyleSheet.create({
     tripName: {
         fontSize: 25,
         fontWeight: '600',
+        color: Colours.textColor,
     },
     location: {
         fontSize: 17,
+        color: Colours.textColor,
     },
     date: {
         fontSize: 15,
+        color: Colours.textColor,
     }
 })
 function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>}) {
@@ -175,13 +183,13 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
                     <View style={{flexDirection: 'row'}}>
                         <TouchableOpacity>
                             <GenericButton2 
-                                text="Edit" colour="dodgerblue" 
+                                text="Edit" colour={Colours.confirmButton} 
                                 height={30} width={45} 
-                                action={editTrip} fontsize={14}/>
+                                action={editTrip} fontsize={14} />
                         </TouchableOpacity>
                         <HorizontalGap width={8}/>
                         <TouchableOpacity onPress={pressDelete}>
-                            <Ionicons name="trash-outline" size={28} color="red"/>
+                            <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
                         </TouchableOpacity>
                     </View>
                 </View>

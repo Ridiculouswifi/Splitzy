@@ -13,6 +13,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { Person } from "../../classes/person";
 import { Currency } from "@/classes/currency";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { Colours } from "@/components/colours";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 
@@ -25,13 +26,13 @@ export default function AddTrip() {
     const tripStyles = StyleSheet.create({
         container: {
             paddingTop: insets.top,
-            backgroundColor: 'skyblue',
+            backgroundColor: Colours.title,
             flex: 1,
         }
     })
     return (
         <View style={tripStyles.container}>
-            <StatusBar barStyle={'dark-content'}/>
+            <StatusBar barStyle={'light-content'}/>
             <TopSection title="Add Trip"/>
             <MainBody/>
         </View>
@@ -161,7 +162,7 @@ function MainBody() {
                 text="Confirm" 
                 height={45} 
                 width={210} 
-                colour="dodgerblue" 
+                colour={Colours.confirmButton}
                 action={confirmDetails}
                 fontsize={22}/>
             
@@ -189,6 +190,7 @@ function Details({setTripName, setLocation, setStartDate, setEndDate}: detailsPr
             fontSize: 18,
             fontWeight: 'bold',
             alignSelf: 'flex-start',
+            color: Colours.textColor,
         },
         miniContainer: {
             flexDirection: 'row',
@@ -222,8 +224,8 @@ function Input({ setVariable, variablePlaceHolder }: InputProps) {
         inputField: {
             width: 0.8 * windowWidth,
             borderBottomWidth: 2,
-            borderColor: 'grey',
-            color: 'black',
+            borderColor: Colours.inputField,
+            color: Colours.textColor,
             fontSize: 20,
         }
     })
@@ -231,7 +233,7 @@ function Input({ setVariable, variablePlaceHolder }: InputProps) {
     return (
         <TextInput 
             placeholder={variablePlaceHolder}
-            placeholderTextColor="grey"
+            placeholderTextColor={Colours.placeholder}
             style={inputStyles.inputField}
             onChangeText={setVariable}/>
     )
@@ -248,7 +250,7 @@ function InputMini({ setVariable, variablePlaceHolder }: InputMiniProps) {
     const inputMiniStyles = StyleSheet.create({
         inputField: {
             width: 0.35 * windowWidth,
-            color: 'black',
+            color: Colours.textColor,
             fontSize: 20,
             flexDirection: 'row',
             alignItems: 'center',
@@ -256,6 +258,7 @@ function InputMini({ setVariable, variablePlaceHolder }: InputMiniProps) {
         inputTitle: {
             fontSize: 15,
             fontWeight: '500',
+            color: Colours.textColor,
         }
     })
 
@@ -292,6 +295,7 @@ function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeig
         title: {
             fontSize: 18,
             fontWeight: 'bold',
+            color: Colours.textColor,
         },
         miniContainer: {
             flexDirection: 'row',
@@ -306,7 +310,7 @@ function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeig
                 <Text style={membersStyles.title}>Members</Text>
                 <HorizontalGap width={15}/>
                 <GenericButton text="Add" height={35} width={55} 
-                    colour="lime" action={addPerson} fontsize={15}/>
+                    colour={Colours.greenButton} action={addPerson} fontsize={15}/>
             </View>
             <VerticalGap height={20}/>
             {people.map((person, index) => (
@@ -330,8 +334,9 @@ const memberStyles = StyleSheet.create({
     },
     field: {
         borderBottomWidth: 2,
-        borderColor: 'grey',
+        borderColor: Colours.inputField,
         fontSize: 20,
+        color: Colours.textColor,
     },
     nameField: {
         width: 0.48 * windowWidth,
@@ -363,17 +368,17 @@ function Member({person, index, deletePerson, updateName, updateWeight}: memberP
         <View style={memberStyles.container}>
             <View style={memberStyles.internalContainer}>
                 <TouchableOpacity onPress={() => deletePerson && deletePerson(index)}>
-                    <Ionicons name="remove-circle-outline" size={25} color="red"/>
+                    <Ionicons name="remove-circle-outline" size={25} color={Colours.cancel}/>
                 </TouchableOpacity>
                 <TextInput value={name} style={[memberStyles.nameField, memberStyles.field]}
-                    placeholder="Name" placeholderTextColor="grey"
+                    placeholder="Name" placeholderTextColor={Colours.placeholder}
                     onChangeText={(newName) => {
                         setName(newName);
                         updateName(newName, index);
                     }}/>
                 <TextInput value={weight} 
                     style={[memberStyles.weightField, memberStyles.field]}
-                    placeholder="Weight" placeholderTextColor="grey"
+                    placeholder="Weight" placeholderTextColor={Colours.placeholder}
                     keyboardType="numeric"
                     onChangeText={(newWeight) => {
                         setWeight(newWeight);
@@ -400,6 +405,7 @@ function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurre
         title: {
             fontSize: 18,
             fontWeight: 'bold',
+            color: Colours.textColor,
         },
         miniContainer: {
             flexDirection: 'row',
@@ -414,7 +420,7 @@ function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurre
                 <Text style={membersStyles.title}>Currencies</Text>
                 <HorizontalGap width={15}/>
                 <GenericButton text="Add" height={35} width={55} 
-                    colour="lime" action={addCurrency} fontsize={15}/>
+                    colour="limegreen" action={addCurrency} fontsize={15}/>
             </View>
             <VerticalGap height={20}/>
             {currencies.map((currency, index) => (
@@ -442,17 +448,17 @@ function Money({currency, index, deleteCurrency, updateCurrency, updateAbbreviat
         <View style={memberStyles.container}>
             <View style={memberStyles.internalContainer}>
                 <TouchableOpacity onPress={() => deleteCurrency && deleteCurrency(index)}>
-                    <Ionicons name="remove-circle-outline" size={25} color="red"/>
+                    <Ionicons name="remove-circle-outline" size={25} color={Colours.cancel}/>
                 </TouchableOpacity>
                 <TextInput value={name} style={[memberStyles.currencyField, memberStyles.field]}
-                    placeholder="Currency" placeholderTextColor="grey"
+                    placeholder="Currency" placeholderTextColor={Colours.placeholder}
                     onChangeText={(newName) => {
                         setName(newName);
                         updateCurrency(newName, index);
                     }}/>
                 <TextInput value={abbreviation} 
                     style={[memberStyles.abbreviationField, memberStyles.field]}
-                    placeholder="Abbreviation" placeholderTextColor="grey"
+                    placeholder="Abbreviation" placeholderTextColor={Colours.placeholder}
                     onChangeText={(newWeight) => {
                         setAbbreviation(newWeight);
                         updateAbbreviation(newWeight, index);

@@ -1,6 +1,6 @@
 import { RouteProp, useRoute } from "@react-navigation/native";
 import React from "react";
-import { Dimensions, Text, View } from "react-native";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -15,6 +15,8 @@ import AddTrip from "./screens/addTrip";
 import Expenses from "./screens/expenses";
 import AddExpense from "./screens/addExpense";
 import Overview from "./screens/overview";
+import { Colours } from "@/components/colours";
+import { Ionicons } from "@expo/vector-icons";
 
 const Stack = createNativeStackNavigator<ParamsList>();
 const Tab = createBottomTabNavigator<ParamsList>();
@@ -55,6 +57,10 @@ export default function Index() {
 
 type RouteTypes = RouteProp<ParamsList>;
 
+const active = 'dodgerblue';
+const inactive = 'grey';
+const size = 23;
+
 function TabNavigator() {
     const route = useRoute<RouteTypes>();
     const tripId = route.params?.tripId;
@@ -69,6 +75,14 @@ function TabNavigator() {
                 animation: 'none',
                 tabBarStyle: {
                     paddingBottom: insets.bottom,
+                    backgroundColor: Colours.backgroundV2,
+                    borderTopColor: Colours.placeholder,
+                    borderTopWidth: 2,
+                },
+                tabBarActiveTintColor: active,
+                tabBarLabelStyle: {
+                    fontSize: 13,
+                    fontWeight: 600,
                 },
             }}
         >
@@ -76,16 +90,37 @@ function TabNavigator() {
                 name="Overview"
                 component={Overview}
                 initialParams={{tripId}}
+                options={{
+                    tabBarIcon: ({focused}) => (
+                        <Ionicons name="newspaper-outline" 
+                                color={focused ? active : inactive}
+                                size={size}/>
+                    )
+                }}
             />
             <Tab.Screen
                 name="Expenses"
                 component={Expenses}
                 initialParams={{tripId}}
+                options={{
+                    tabBarIcon: ({focused}) => (
+                        <Ionicons name="card-outline" 
+                                color={focused ? active : inactive}
+                                size={size}/>
+                    )
+                }}
             />
             <Tab.Screen
                 name="Details"
                 component={Trip}
                 initialParams={{tripId}}
+                options={{
+                    tabBarIcon: ({focused}) => (
+                        <Ionicons name="menu" 
+                                color={focused ? active : inactive}
+                                size={size}/>
+                    )
+                }}
             />
         </Tab.Navigator>
     )
