@@ -168,7 +168,7 @@ const expenseStyles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     textContainer: {
-        
+        width: 0.55 * windowWidth,
     },
     rightContainer: {
         justifyContent: 'space-between',
@@ -239,7 +239,7 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
             <VerticalGap key={item.id} height={10}/>
             <TouchableOpacity style={expenseStyles.container} activeOpacity={0.4}>
                 <View style={expenseStyles.textContainer}>
-                    <Text style={expenseStyles.expenseName}>{item.name}</Text>
+                    <Text style={expenseStyles.expenseName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
                     <VerticalGap height={5}/>
                     <Text style={expenseStyles.payer}>By: {payer}</Text>
                     <VerticalGap height={10}/>
