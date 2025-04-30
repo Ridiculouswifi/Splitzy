@@ -224,3 +224,13 @@ export async function getLatestExpenseId(db: SQLiteDatabase, tableName: string) 
     console.log(data);
     return data;
 }
+
+export async function updateExpenseStatus(db: SQLiteDatabase, id: number, tripId: number, status: string) {
+    let tableName: string = "trip_" + tripId.toString();
+
+    await db.runAsync(`
+        UPDATE ${tableName}
+        SET is_resolved = ${status}
+        WHERE id = ${id}
+    `);
+}

@@ -177,16 +177,20 @@ function calculateValues(props: CalculateProps) {
         let personColumn = 0;
         for (let j = 0; j < totalSpent.length; j++) {
             if (totalSpent[j]["currencyId"] == props.expenses[i]["currency_id"]) {
+                let expense: number = expenditure * (props.expenses[i][columnNames[personColumn]] / sumWeight);
+                let paid: number = 0;
+
                 // Update Personal Expenses
-                totalExpense[j]["amount"] += expenditure * (props.expenses[i][columnNames[personColumn]] / sumWeight);
+                totalExpense[j]["amount"] += expense;
 
                 // Update Spent Amount
                 if (totalSpent[j]["personId"] == props.expenses[i]["payer_id"]) {
                     totalSpent[j]["amount"] += expenditure;
+                    paid = expenditure;
                 }
 
                 // Update Balance
-                totalBalance[j]["amount"] = totalSpent[j]["amount"] - totalExpense[j]["amount"];
+                totalBalance[j]["amount"] += props.expenses[i]["is_resolved"] == '0' ? paid - expense : 0;
 
                 j += currencyCount - 1;
                 personColumn++;

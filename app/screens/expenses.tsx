@@ -10,7 +10,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { Ionicons } from "@expo/vector-icons";
-import { deleteExpense, getCurrency, getPerson } from "@/database/databaseSqlite";
+import { deleteExpense, getCurrency, getPerson, updateExpenseStatus } from "@/database/databaseSqlite";
 import { Colours } from "@/components/colours";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Expenses">;
@@ -213,6 +213,7 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [payer, setPayer] = useState<string>('');
     const [abbreviation, setAbbreviation] = useState<string>('');
+    const [isResolved, setIsResolved] = useState<string>('0');
 
     async function getText() {
         const payerData = await getPerson(db, item.payer_id) as PeopleTableTypes[];
@@ -220,6 +221,8 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
 
         const currencyData = await getCurrency(db, item.currency_id) as CurrencyTableTypes[];
         setAbbreviation(currencyData[0].abbreviation);
+
+        setIsResolved(item.is_resolved);
     }
 
     useEffect(() => {
@@ -236,7 +239,8 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
     }
 
     function resolved() {
-
+        setIsResolved(isResolved == '0' ? '1' : '0');
+        updateExpenseStatus(db, item.id, tripId, isResolved == '0' ? '1' : '0');
     }
     
     return (
@@ -257,9 +261,9 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
                             height={30} 
                             width={80} 
                             fontsize={14}
-                            colour={Colours.confirmButton} 
+                            colour={isResolved == '0' ? Colours.confirmButton : 'grey'} 
                             action={resolved} 
-                            textColour={Colours.textColor}/>
+                            textColour={isResolved == '0' ? Colours.textColor : 'black'}/>
                         <HorizontalGap width={10}/>
                         <TouchableOpacity onPress={pressDelete}>
                             <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
