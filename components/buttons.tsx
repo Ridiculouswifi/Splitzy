@@ -38,15 +38,3 @@ export function GenericButton({ action, height, width, colour, text, fontsize, t
         </TouchableOpacity>
     )
 }
-
-export function GenericButton2({ action, height, width, colour, text, fontsize, textColour }: genericButtonProps) {
-    return (
-        <TouchableOpacity 
-            style={[genericButtonStyles.button, 
-                {height: height, width: width, backgroundColor: colour}]}
-            activeOpacity={0.50}
-            onPress={action}>
-            <Text style={[genericButtonStyles.text, {color: textColour, fontSize: fontsize}]}>{text}</Text>
-        </TouchableOpacity>
-    )
-}

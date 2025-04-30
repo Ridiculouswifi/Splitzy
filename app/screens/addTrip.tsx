@@ -7,7 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { GenericButton, GenericButton2 } from "@/components/buttons";
+import { GenericButton } from "@/components/buttons";
 import { addMembers, addToCurrencies, addToPeople, addToTrips, createMemberColumn, createTrip, getLatestTripId } from "@/database/databaseSqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { Person } from "../../classes/person";
@@ -158,7 +158,7 @@ function MainBody() {
             <Divider/>
             <VerticalGap height={20}/>
 
-            <GenericButton2 
+            <GenericButton
                 text="Confirm" 
                 height={45} 
                 width={210} 

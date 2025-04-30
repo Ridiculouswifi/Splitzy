@@ -4,7 +4,7 @@ import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, 
 import { ParamsList } from "..";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GenericButton2 } from "@/components/buttons";
+import { GenericButton } from "@/components/buttons";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
@@ -65,7 +65,7 @@ function MainBody({tripId}: {tripId: number}) {
     return (
         <View style={genericMainBodyStyles.outerContainer}>
             <View style={mainBodyStyles.expenseContainer}>
-                <GenericButton2 
+                <GenericButton
                     text="New Expense" 
                     colour={Colours.confirmButton}
                     textColour={Colours.textColor}
@@ -256,7 +256,7 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
                 </View>
                 <View style={expenseStyles.rightContainer}>
                     <View style={expenseStyles.buttonsContainer}>
-                        <GenericButton2 
+                        <GenericButton
                             text="Resolved" 
                             height={30} 
                             width={80} 

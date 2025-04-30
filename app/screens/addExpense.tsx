@@ -6,7 +6,7 @@ import { ParamsList } from "..";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { useCallback, useEffect, useState } from "react";
 import { Currency } from "@/classes/currency";
-import { GenericButton2 } from "@/components/buttons";
+import { GenericButton } from "@/components/buttons";
 import Picker from "@ouroboros/react-native-picker";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -139,7 +139,7 @@ function MainBody({tripId}: {tripId: number}) {
             <Divider/>
             <VerticalGap height={20}/>
 
-            <GenericButton2 
+            <GenericButton
                 text="Confirm" 
                 height={45} 
                 width={210} 
