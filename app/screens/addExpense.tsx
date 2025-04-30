@@ -94,7 +94,7 @@ function MainBody({tripId}: {tripId: number}) {
         const oldData = people;
         for (let i = 0; i < oldData.length; i++) {
             if (oldData[i].id == id) {
-                oldData[i].weight = parseInt(newWeight);
+                oldData[i].weight = parseFloat(newWeight);
             }
         }
         setPeople(oldData);
@@ -266,7 +266,7 @@ const inputStyles = StyleSheet.create({
     inputField: {
         borderBottomWidth: 2,
         borderColor: Colours.inputField,
-        color: 'black',
+        color: Colours.textColor,
         fontSize: 20,
     }
 })
@@ -406,7 +406,7 @@ function Member(props: memberProps) {
                 <TextInput style={memberStyles.field} value={weight}
                     onChangeText={(newWeight) => {
                         setWeight(newWeight);
-                        props.updatePeople(props.memberId, newWeight);
+                        props.updatePeople(props.memberId, (newWeight == "") ? "0" : newWeight);
                     }}
                     keyboardType="numeric"/>
             </View>

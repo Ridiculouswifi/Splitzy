@@ -169,7 +169,7 @@ export async function createMemberColumn(db: SQLiteDatabase, tripId: number, per
     let columnName: string = "person_" + personId.toString();
 
     const data = await db.execAsync(`
-        ALTER TABLE ${tableName} ADD COLUMN ${columnName} INTEGER;
+        ALTER TABLE ${tableName} ADD COLUMN ${columnName} FLOAT;
     `);
 }
 

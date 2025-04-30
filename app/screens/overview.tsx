@@ -50,14 +50,11 @@ interface CurrencyTableTypes {
     abbreviation: string,
     trip_id: number
 }
-interface ExpenseEntity {
-    id: number;
-    name: string;
-    payer_id: number;
-    expense: number;
-    currency_id: number;
-    date: string;
-    is_resolved: string;
+interface TotalTypes {
+    personId: number,
+    currencyId: number,
+    abbreviation: string,
+    amount: number,
 }
 function MainBody({tripId}: {tripId: number}) {
     const db = useSQLiteContext();
@@ -69,9 +66,13 @@ function MainBody({tripId}: {tripId: number}) {
     const [currencies, setCurrencies] = useState<CurrencyTableTypes[]>([]);
     const [expenses, setExpenses] = useState<[]>([]);
 
+    const [totalSpent, setTotalSpent] = useState<TotalTypes[]>([]);
+    const [totalExpense, setTotalExpense] = useState<TotalTypes[]>([]);
+    const [totalBalance, setTotalBalance] = useState<TotalTypes[]>([]);
+
     async function refetch(){
         setIsLoading(true);
-        
+
         const peopleData: PeopleTableTypes[] = await getRelatedPeople(db, tripId) as PeopleTableTypes[];
         setPeople(peopleData);
 
@@ -91,7 +92,7 @@ function MainBody({tripId}: {tripId: number}) {
 
     const refetchItems = useCallback(async () => {
         await refetch();
-        console.log("Overview refetched");
+        console.log("Overview Refetched");
     }, [db])
 
     useEffect(() => {
@@ -99,9 +100,17 @@ function MainBody({tripId}: {tripId: number}) {
             await refetchItems();
         });
 
-        console.log('currencies changed:', currencies);
+        // console.log('currencies changed:', currencies);
         return unsubscribe;
     }, [navigation]);
+
+
+    useEffect(() => {
+        if (people.length > 0 && currencies.length > 0) {
+            calculateValues({people, currencies, expenses, setTotalSpent, setTotalExpense, setTotalBalance});
+        }
+    }, [expenses, people, currencies])
+
 
     return (
         <View style={genericMainBodyStyles.outerContainer}>
@@ -109,13 +118,19 @@ function MainBody({tripId}: {tripId: number}) {
         <View style={genericMainBodyStyles.container}>
             {(!isLoading) && 
             <View style={genericMainBodyStyles.container}>
-                <PaidFor expenses={expenses} currencies={currencies} people={people}/>
+                <Statistics people={people} compilation={totalSpent} title="Total Paid"/>
 
                 <VerticalGap height={20}/>
                 <Divider/>
                 <VerticalGap height={20}/>
 
-                <Differential expenses={expenses} currencies={currencies} people={people}/>
+                <Statistics people={people} compilation={totalExpense} title="Personal Expenses"/>
+
+                <VerticalGap height={20}/>
+                <Divider/>
+                <VerticalGap height={20}/>
+
+                <Statistics people={people} compilation={totalBalance} title="Balance"/>
             </View>
             }
         </View>
@@ -124,12 +139,98 @@ function MainBody({tripId}: {tripId: number}) {
     )
 }
 
-interface PaidForProps {
-    expenses: [];
-    currencies: CurrencyTableTypes[];
+interface CalculateProps {
     people: PeopleTableTypes[];
+    currencies: CurrencyTableTypes[];
+    expenses: [];
+    setTotalSpent: (variable: TotalTypes[]) => void,
+    setTotalExpense: (variable: TotalTypes[]) => void,
+    setTotalBalance: (variable: TotalTypes[]) => void,
 }
-const paidForStyles = StyleSheet.create({
+function calculateValues(props: CalculateProps) {
+    const peopleCount: number = props.people.length;
+    const currencyCount: number = props.currencies.length;
+    const expenseCount: number = props.expenses.length;
+
+    let totalSpent: TotalTypes[] = [];
+    let totalExpense: TotalTypes[] = [];
+    let totalBalance: TotalTypes[] = [];
+    let columnNames: string[] = [];
+
+    for (let i = 0; i < peopleCount; i++) {
+        for (let j = 0; j < currencyCount; j++) {
+            totalSpent.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
+            totalExpense.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
+            totalBalance.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
+        }
+        columnNames.push("person_" + props.people[i]["id"].toString());
+    }
+
+    for (let i = 0; i < expenseCount; i++) {
+        const expenditure = props.expenses[i]["expense"];
+
+        let sumWeight: number = 0;
+        for (let k = 0; k < peopleCount; k++) {
+            sumWeight += props.expenses[i][columnNames[k]];
+        }
+        
+        let personColumn = 0;
+        for (let j = 0; j < totalSpent.length; j++) {
+            if (totalSpent[j]["currencyId"] == props.expenses[i]["currency_id"]) {
+                // Update Personal Expenses
+                totalExpense[j]["amount"] += expenditure * (props.expenses[i][columnNames[personColumn]] / sumWeight);
+
+                // Update Spent Amount
+                if (totalSpent[j]["personId"] == props.expenses[i]["payer_id"]) {
+                    totalSpent[j]["amount"] += expenditure;
+                }
+
+                // Update Balance
+                totalBalance[j]["amount"] = totalSpent[j]["amount"] - totalExpense[j]["amount"];
+
+                j += currencyCount - 1;
+                personColumn++;
+            }
+        }
+    }
+
+    props.setTotalSpent(totalSpent);
+    props.setTotalExpense(totalExpense);
+    props.setTotalBalance(totalBalance);
+}
+
+
+interface DetailsProps {
+    people: PeopleTableTypes[],
+    compilation: TotalTypes[],
+}
+interface PerPersonProps {
+    personId: number,
+    personName: string,
+    compilation: TotalTypes[],
+}
+interface ExpenseProps {
+    amount: number,
+    abbreviation: string,
+}
+interface TitleProps {
+    title: string,
+}
+
+interface SplitArrayProps {
+    setArray: (variable: TotalTypes[]) => void,
+}
+function splitArray(props: PerPersonProps & SplitArrayProps) {
+    let result: TotalTypes[] = [];
+    for (let i = 0; i < props.compilation.length; i++) {
+        if (props.compilation[i]["personId"] == props.personId) {
+            result.push(props.compilation[i])
+        }
+    }
+    props.setArray(result);
+}
+
+const statisticsStyles = StyleSheet.create({
     container: {
         width: 0.8 * windowWidth,
     },
@@ -139,35 +240,23 @@ const paidForStyles = StyleSheet.create({
         color: Colours.textColor,
     },
 })
-function PaidFor(props: PaidForProps) {    
+function Statistics(props: DetailsProps & TitleProps) {    
     return (
-        <View style={[paidForStyles.container]}>
-            <Text style={paidForStyles.title}>Total Paid</Text>
+        <View style={[statisticsStyles.container]}>
+            <Text style={statisticsStyles.title}>{props.title}</Text>
             <VerticalGap height={10}/>
             {props.people.map((person) => (
-                <PaidForPayer 
+                <StatisticsIndiv 
                     key={person.id}
-                    expenses={props.expenses}
-                    currencies={props.currencies}
                     personId={person.id}
-                    personName={person.name}/>
+                    personName={person.name}
+                    compilation={props.compilation}/>
             ))}
         </View>
     )
 }
 
-interface PaidForPayerProps {
-    expenses: [];
-    currencies: CurrencyTableTypes[];
-    personId: number;
-    personName: string;
-}
-interface ContributionsTypes {
-    currencyId: number;
-    abbreviation: string;
-    total: number;
-}
-const paidForPayerStyles = StyleSheet.create({
+const statisticsIndivStyles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -188,44 +277,22 @@ const paidForPayerStyles = StyleSheet.create({
         alignItems: 'flex-end',
     },
 })
-function PaidForPayer(props: PaidForPayerProps) {
-    const [contributions, setContributions] = useState<ContributionsTypes[]>([]);
-
-    function calculateTotal(personId: number) {
-        const currencyCount: number = props.currencies.length;
-        const expenseCount: number = props.expenses.length;
-        let currencyTotal: ContributionsTypes[] = [];
-        for (let i = 0; i < currencyCount; i++) {
-            currencyTotal.push({"currencyId": props.currencies[i].id, "abbreviation": props.currencies[i].abbreviation, "total": 0});
-        }
-        for (let i = 0; i < expenseCount; i++) {
-            if (props.expenses[i]["payer_id"] == personId) {
-                for (let j = 0; j < currencyCount; j++) {
-                    if (props.expenses[i]["currency_id"] == currencyTotal[j].currencyId) {
-                        let newTotal = currencyTotal[j].total;
-                        newTotal += props.expenses[i]["expense"];
-                        currencyTotal[j].total = newTotal;
-                    }
-                }
-            }
-        }
-        //console.log(currencyTotal);
-        setContributions(currencyTotal);
-    }
+function StatisticsIndiv(props: PerPersonProps) {
+    const [contributions, setContributions] = useState<TotalTypes[]>([]);
 
     useEffect(() => {
-        calculateTotal(props.personId);
+        splitArray({...props, setArray: setContributions}) // ... is used to spread out the props
     }, [])
 
     return (
         <View>
-        <View style={paidForPayerStyles.container}>
-            <View style={paidForPayerStyles.nameContainer}>
-                <Text style={paidForPayerStyles.name}>{props.personName}</Text>
+        <View style={statisticsIndivStyles.container}>
+            <View style={statisticsIndivStyles.nameContainer}>
+                <Text style={statisticsIndivStyles.name}>{props.personName}</Text>
             </View>
-            <View style={paidForPayerStyles.amountContainer}>
+            <View style={statisticsIndivStyles.amountContainer}>
                 {contributions.map((contribution) => (
-                    <Expense key={contribution.currencyId} amount={contribution.total} abbreviation={contribution.abbreviation}/>
+                    <Expense key={contribution.currencyId} amount={contribution.amount} abbreviation={contribution.abbreviation}/>
                 ))}
             </View>
         </View>
@@ -234,10 +301,6 @@ function PaidForPayer(props: PaidForPayerProps) {
     )
 }
 
-interface ExpenseProps {
-    amount: number;
-    abbreviation: string;
-}
 const expenseStyles = StyleSheet.create({
     container: {
         flexDirection: 'row',
@@ -258,36 +321,8 @@ const expenseStyles = StyleSheet.create({
 function Expense(props: ExpenseProps) {
     return (
         <View style={expenseStyles.container}>
-            <Text style={expenseStyles.amount}>{props.amount}</Text>
+            <Text style={expenseStyles.amount}>{props.amount.toFixed(2)}</Text>
             <Text style={expenseStyles.abbreviation}> {props.abbreviation}</Text>
-        </View>
-    )
-}
-
-function Differential(props: PaidForProps) {
-    return (
-        <View style={paidForStyles.container}>
-            <Text style={paidForStyles.title}>Difference</Text>
-            <VerticalGap height={10}/>
-            {props.people.map((person) => (
-                <PaidForPayer 
-                    key={person.id}
-                    expenses={props.expenses}
-                    currencies={props.currencies}
-                    personId={person.id}
-                    personName={person.name}/>
-            ))}
-        </View>
-    )
-}
-
-function DifferentialIndividual(props: PaidForPayerProps) {
-    
-    
-    return (
-        <View style={paidForPayerStyles.container}>
-            <Text>{props.personName}</Text>
-            
         </View>
     )
 }

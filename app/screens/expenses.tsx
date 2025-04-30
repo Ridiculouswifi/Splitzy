@@ -111,7 +111,7 @@ function DisplayExpenses({tripId}: {tripId: number}) {
 
     const refetchItems = useCallback(() => {
         refetch();
-        console.log("Refetched");
+        console.log("Expenses Refetched");
     }, [db])
 
     useEffect(() => {
@@ -168,7 +168,7 @@ const expenseStyles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     textContainer: {
-        width: 0.55 * windowWidth,
+        width: 0.45 * windowWidth,
     },
     rightContainer: {
         justifyContent: 'space-between',
@@ -255,7 +255,7 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
                         </TouchableOpacity>
                     </View>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Text style={expenseStyles.amount}>{item.expense}</Text>
+                        <Text style={expenseStyles.amount}>{item.expense.toFixed(2)}</Text>
                         <Text style={expenseStyles.abbreviation}> {abbreviation}</Text>
                     </View>
                     <VerticalGap height={1}/>
