@@ -227,7 +227,7 @@ function DisplayTrips() {
         await db.withExclusiveTransactionAsync(async () => {
             setTrips(
                 await db.getAllAsync<ItemEntity>(
-                    `SELECT * FROM trips`
+                    `SELECT * FROM trips ORDER BY start_date DESC, end_date DESC`
                 )
             );
         });
