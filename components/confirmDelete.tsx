@@ -20,6 +20,7 @@ const confirmDeleteStyles = StyleSheet.create({
     },
     background: {
         flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
     container: {
         height: 150,
