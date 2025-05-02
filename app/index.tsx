@@ -1,22 +1,23 @@
-import { RouteProp, useRoute } from "@react-navigation/native";
-import React from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { RouteProp, useRoute } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import React from "react";
+import { Dimensions } from "react-native";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { openDatabaseSync, SQLiteProvider } from "expo-sqlite";
 import * as DB from "../database/databaseSqlite";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 
-import Home from "./screens/home";
-import Trip from "./screens/trip";
-import AddTrip from "./screens/addTrip";
-import Expenses from "./screens/expenses";
-import AddExpense from "./screens/addExpense";
-import Overview from "./screens/overview";
 import { Colours } from "@/components/colours";
 import { Ionicons } from "@expo/vector-icons";
+
+import AddExpense from "./screens/addExpense";
+import AddTrip from "./screens/addTrip";
+import Expenses from "./screens/expenses";
+import Home from "./screens/home";
+import Overview from "./screens/overview";
+import Trip from "./screens/trip";
 
 const Stack = createNativeStackNavigator<ParamsList>();
 const Tab = createBottomTabNavigator<ParamsList>();
@@ -26,33 +27,33 @@ const windowWidth = Dimensions.get('window').width;
 const windowFontScale = Dimensions.get('window').fontScale;
 
 export type ParamsList = {
-    TabNavigator: { tripId: number };
-    
-    Home: undefined;
-    Details: { tripId: number };
-    AddTrip: undefined;
-    Expenses: { tripId: number };
-    AddExpense: { tripId: number };
-    Overview: { tripId: number };
+  TabNavigator: { tripId: number };
+  
+  Home: undefined;
+  Details: { tripId: number };
+  AddTrip: undefined;
+  Expenses: { tripId: number };
+  AddExpense: { tripId: number };
+  Overview: { tripId: number };
 }
 
 const db = openDatabaseSync("splitzy.db");
 
 export default function Index() {
-    useDrizzleStudio(db);
+  useDrizzleStudio(db);
 
-    return (
-        <SafeAreaProvider>
-            <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
-                <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
-                    <Stack.Screen name="Home" component={Home}/>
-                    <Stack.Screen name="TabNavigator" component={TabNavigator}/>
-                    <Stack.Screen name="AddTrip" component={AddTrip}/>
-                    <Stack.Screen name="AddExpense" component={AddExpense}/>
-                </Stack.Navigator>
-            </SQLiteProvider>
-        </SafeAreaProvider>
-    );
+  return (
+      <SafeAreaProvider>
+          <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
+              <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
+                  <Stack.Screen name="Home" component={Home}/>
+                  <Stack.Screen name="TabNavigator" component={TabNavigator}/>
+                  <Stack.Screen name="AddTrip" component={AddTrip}/>
+                  <Stack.Screen name="AddExpense" component={AddExpense}/>
+              </Stack.Navigator>
+          </SQLiteProvider>
+      </SafeAreaProvider>
+  );
 }
 
 type RouteTypes = RouteProp<ParamsList>;

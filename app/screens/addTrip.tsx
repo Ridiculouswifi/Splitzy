@@ -1,21 +1,21 @@
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useState } from "react";
-import { Dimensions, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { ParamsList } from "..";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { GenericButton } from "@/components/buttons";
-import { addMembers, addToCurrencies, addToPeople, addToTrips, createMemberColumn, createTrip, getLatestTripId } from "@/database/databaseSqlite";
-import { useSQLiteContext } from "expo-sqlite";
-import { Person } from "../../classes/person";
 import { Currency } from "@/classes/currency";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
+import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { addMembers, addToCurrencies, addToPeople, addToTrips, createTrip, getLatestTripId } from "@/database/databaseSqlite";
+import { Ionicons } from "@expo/vector-icons";
+import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSQLiteContext } from "expo-sqlite";
+import React, { useState } from "react";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ParamsList } from "..";
+import { Person } from "../../classes/person";
 
-type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
+type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "AddTrip">;
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;

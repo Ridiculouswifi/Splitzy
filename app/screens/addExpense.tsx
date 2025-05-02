@@ -1,18 +1,17 @@
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
-import { RouteProp, useRoute } from "@react-navigation/native";
-import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ParamsList } from "..";
-import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import { useCallback, useEffect, useState } from "react";
-import { Currency } from "@/classes/currency";
 import { GenericButton } from "@/components/buttons";
-import Picker from "@ouroboros/react-native-picker";
+import { Colours } from "@/components/colours";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
+import MyPicker from "@/components/picker";
+import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { addExpense, getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { addExpense, getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
+import { RouteProp, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { Colours } from "@/components/colours";
+import { useEffect, useState } from "react";
+import { Dimensions, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ParamsList } from "..";
 
 type RouteTypes = RouteProp<ParamsList, "AddExpense">;
 
@@ -202,19 +201,32 @@ const detailsStyle = StyleSheet.create({
 function Details(props: detailsProps){
     const insets = useSafeAreaInsets();
 
-    const [currencyPicker, setCurrencyPicker] = useState(0);
-    const [payerPicker, setPayerPicker] = useState(0);
+    const [currencyIndex, setCurrencyIndex] = useState(0);
+    const [payerIndex, setPayerIndex] = useState<number>(0);
+
+    const [viewCurrencyPicker, setViewCurrencyPicker] = useState(false);
+    const [viewPayerPicker, setViewPayerPicker] = useState(false);
 
     useEffect(() => {
         if (props.currencyList[0] != undefined) {
-            setCurrencyPicker(props.currencyList[0].value);
+            setCurrencyIndex(0);
             props.setCurrencyId(props.currencyList[0].value);
         }
         if (props.peopleList[0] != undefined) {
-            setPayerPicker(props.peopleList[0].value);
+            setPayerIndex(0);
             props.setPayerId(props.peopleList[0].value);
         }
+        console.log(props.currencyList);
     }, [props.currencyList, props.peopleList]);
+
+    useEffect(() => {
+        if (props.peopleList[0] != undefined) {
+            props.setPayerId(props.peopleList[payerIndex].value);
+        }
+        if (props.currencyList[0] != undefined) {
+            props.setCurrencyId(props.currencyList[currencyIndex].value);
+        }
+    }, [payerIndex, currencyIndex])
 
     return (
         <View style={detailsStyle.container}>
@@ -224,33 +236,30 @@ function Details(props: detailsProps){
             <VerticalGap height={20}/>
             <View style={detailsStyle.miniContainer}>
                 <Text style={detailsStyle.payerTitle}>By</Text>
-                <View style={[detailsStyle.pickerContainer, inputStyles.inputField, {width: 0.7 * windowWidth}]}>
-                    <Picker
-                        onChanged={(newValue) => {
-                            setPayerPicker(newValue);
-                            props.setPayerId(newValue);
-                        }}
-                        options={props.peopleList}
-                        value={payerPicker}
-                        style={[detailsStyle.picker, {width: 0.65 * windowWidth}]}/>
+                <Pressable style={[detailsStyle.pickerContainer, inputStyles.inputField, {width: 0.7 * windowWidth}]}
+                        onPress={() => {setViewPayerPicker(true)}}>
+                    <MyPicker isVisible={viewPayerPicker} 
+                            setIsVisible={setViewPayerPicker} 
+                            values={props.peopleList}
+                            setIndex={setPayerIndex}
+                            initialIndex={payerIndex}/>
+                    <Text style={detailsStyle.picker}>{props.peopleList[0] != undefined ? props.peopleList[payerIndex].text : ""}</Text>
                     <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
-                </View>
+                </Pressable>
             </View>
             <VerticalGap height={20}/>
             <View style={detailsStyle.miniContainer}>
                 <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth}/>
-                <View style={[inputStyles.inputField, detailsStyle.pickerContainer]}>
-                    <Picker 
-                        onChanged={(newValue) => {
-                            setCurrencyPicker(newValue);
-                            props.setCurrencyId(newValue);
-                        }}
-                        options={props.currencyList}
-                        value={currencyPicker}
-                        style={detailsStyle.picker}
-                    />
+                <Pressable style={[inputStyles.inputField, detailsStyle.pickerContainer]}
+                        onPress={() => {setViewCurrencyPicker(true)}}>
+                    <MyPicker isVisible={viewCurrencyPicker} 
+                            setIsVisible={setViewCurrencyPicker} 
+                            values={props.currencyList}
+                            setIndex={setCurrencyIndex}
+                            initialIndex={currencyIndex}/>
+                    <Text style={detailsStyle.picker}>{props.currencyList[0] != undefined ? props.currencyList[currencyIndex].text : ""}</Text>
                     <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
-                </View>
+                </Pressable>
             </View>
             <VerticalGap height={20}/>
             <DateInput setVariable={props.setDate} variablePlaceHolder="Date"/>

@@ -1,15 +1,14 @@
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ParamsList } from "..";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
-import { Text } from "react-native";
-import { useCallback, useEffect, useState } from "react";
-import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
-import { useSQLiteContext } from "expo-sqlite";
-import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { Colours } from "@/components/colours";
+import { Divider, VerticalGap } from "@/components/gap";
+import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSQLiteContext } from "expo-sqlite";
+import { useCallback, useEffect, useState } from "react";
+import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Overview">;
 type RouteTypes = RouteProp<ParamsList, "Overview">;

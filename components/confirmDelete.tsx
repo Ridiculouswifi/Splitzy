@@ -1,8 +1,8 @@
-import { Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Modal, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GenericButton } from "./buttons";
-import { HorizontalGap } from "./gap";
 import { Colours } from "./colours";
+import { HorizontalGap } from "./gap";
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -20,6 +20,7 @@ const confirmDeleteStyles = StyleSheet.create({
     },
     background: {
         flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
     },
     container: {
         height: 150,

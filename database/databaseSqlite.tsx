@@ -1,5 +1,4 @@
-import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
-import { openDatabaseSync, SQLiteDatabase, SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
+import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
 
 const database = openDatabaseSync("splitzy.db");
 

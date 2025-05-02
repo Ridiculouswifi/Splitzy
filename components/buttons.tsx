@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 interface genericButtonProps {
