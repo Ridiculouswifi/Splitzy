@@ -1,5 +1,3 @@
-import React from "react"
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 // Dark Style Colours
 export const Colours = {

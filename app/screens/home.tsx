@@ -1,16 +1,16 @@
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useCallback, useEffect, useState } from "react";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ParamsList } from "..";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { useSQLiteContext } from "expo-sqlite";
+import { GenericButton } from "@/components/buttons";
+import { Colours } from "@/components/colours";
+import { ConfirmDelete } from "@/components/confirmDelete";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
-import { GenericButton } from "@/components/buttons";
-import { ConfirmDelete } from "@/components/confirmDelete";
-import { Colours } from "@/components/colours";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSQLiteContext } from "expo-sqlite";
+import React, { useCallback, useEffect, useState } from "react";
+import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
 

@@ -1,18 +1,16 @@
+import { GenericButton } from "@/components/buttons";
+import { Colours } from "@/components/colours";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { addExpense, getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
+import { Ionicons } from "@expo/vector-icons";
+import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { RouteProp, useRoute } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
-import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import { useCallback, useEffect, useState } from "react";
-import { Currency } from "@/classes/currency";
-import { GenericButton } from "@/components/buttons";
-import Picker from "@ouroboros/react-native-picker";
-import { Ionicons } from "@expo/vector-icons";
-import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { addExpense, getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
-import { useSQLiteContext } from "expo-sqlite";
-import { Colours } from "@/components/colours";
 
 type RouteTypes = RouteProp<ParamsList, "AddExpense">;
 
@@ -225,14 +223,6 @@ function Details(props: detailsProps){
             <View style={detailsStyle.miniContainer}>
                 <Text style={detailsStyle.payerTitle}>By</Text>
                 <View style={[detailsStyle.pickerContainer, inputStyles.inputField, {width: 0.7 * windowWidth}]}>
-                    <Picker
-                        onChanged={(newValue) => {
-                            setPayerPicker(newValue);
-                            props.setPayerId(newValue);
-                        }}
-                        options={props.peopleList}
-                        value={payerPicker}
-                        style={[detailsStyle.picker, {width: 0.65 * windowWidth}]}/>
                     <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
                 </View>
             </View>
@@ -240,15 +230,6 @@ function Details(props: detailsProps){
             <View style={detailsStyle.miniContainer}>
                 <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth}/>
                 <View style={[inputStyles.inputField, detailsStyle.pickerContainer]}>
-                    <Picker 
-                        onChanged={(newValue) => {
-                            setCurrencyPicker(newValue);
-                            props.setCurrencyId(newValue);
-                        }}
-                        options={props.currencyList}
-                        value={currencyPicker}
-                        style={detailsStyle.picker}
-                    />
                     <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
                 </View>
             </View>

@@ -1,17 +1,17 @@
+import { GenericButton } from "@/components/buttons";
+import { Colours } from "@/components/colours";
+import { ConfirmDelete } from "@/components/confirmDelete";
+import { HorizontalGap, VerticalGap } from "@/components/gap";
+import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { deleteExpense, getCurrency, getPerson, updateExpenseStatus } from "@/database/databaseSqlite";
+import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ParamsList } from "..";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GenericButton } from "@/components/buttons";
-import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { ConfirmDelete } from "@/components/confirmDelete";
-import { Ionicons } from "@expo/vector-icons";
-import { deleteExpense, getCurrency, getPerson, updateExpenseStatus } from "@/database/databaseSqlite";
-import { Colours } from "@/components/colours";
+import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Expenses">;
 type RouteTypes = RouteProp<ParamsList, "Expenses">;
