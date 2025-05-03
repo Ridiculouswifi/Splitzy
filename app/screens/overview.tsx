@@ -49,6 +49,14 @@ interface CurrencyTableTypes {
     abbreviation: string,
     trip_id: number
 }
+interface TransactionsTableTypes {
+    id: number;
+    payer_id: number;
+    recipient_id: number;
+    amount: number;
+    currency_id: number;
+    date: string;
+}
 interface TotalTypes {
     personId: number,
     currencyId: number,
@@ -58,12 +66,14 @@ interface TotalTypes {
 function MainBody({tripId}: {tripId: number}) {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
-    const tableName: string = "trip_" + tripId.toString();
+    const tripName: string = "trip_" + tripId.toString();
+    const transactionName: string = "transaction_" + tripId.toString();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     
     const [people, setPeople] = useState<PeopleTableTypes[]>([]);
     const [currencies, setCurrencies] = useState<CurrencyTableTypes[]>([]);
     const [expenses, setExpenses] = useState<[]>([]);
+    const [transactions, setTransactions] = useState<TransactionsTableTypes[]>([]);
 
     const [totalSpent, setTotalSpent] = useState<TotalTypes[]>([]);
     const [totalExpense, setTotalExpense] = useState<TotalTypes[]>([]);
@@ -80,9 +90,14 @@ function MainBody({tripId}: {tripId: number}) {
 
         await db.withExclusiveTransactionAsync(async () => {
             setExpenses(
-                    await db.getAllAsync(`
-                    SELECT * FROM ${tableName};    
+                await db.getAllAsync(`
+                    SELECT * FROM ${tripName};    
                 `) as []
+            );
+            setTransactions(
+                await db.getAllAsync(`
+                    SELECT * FROM ${transactionName};
+                `) as TransactionsTableTypes[]
             );
         });
 
@@ -103,12 +118,11 @@ function MainBody({tripId}: {tripId: number}) {
         return unsubscribe;
     }, [navigation]);
 
-
     useEffect(() => {
         if (people.length > 0 && currencies.length > 0) {
-            calculateValues({people, currencies, expenses, setTotalSpent, setTotalExpense, setTotalBalance});
+            calculateValues({people, currencies, expenses, transactions, setTotalSpent, setTotalExpense, setTotalBalance});
         }
-    }, [expenses, people, currencies])
+    }, [expenses, people, currencies, transactions])
 
 
     return (
@@ -117,6 +131,7 @@ function MainBody({tripId}: {tripId: number}) {
         <View style={{alignItems: 'center'}}>
             {(!isLoading) && 
             <View style={genericMainBodyStyles.container}>
+                <VerticalGap height={10}/>
                 <Statistics people={people} compilation={totalSpent} title="Total Paid"/>
 
                 <VerticalGap height={20}/>
@@ -142,6 +157,7 @@ interface CalculateProps {
     people: PeopleTableTypes[];
     currencies: CurrencyTableTypes[];
     expenses: [];
+    transactions: TransactionsTableTypes[];
     setTotalSpent: (variable: TotalTypes[]) => void,
     setTotalExpense: (variable: TotalTypes[]) => void,
     setTotalBalance: (variable: TotalTypes[]) => void,
@@ -193,6 +209,17 @@ function calculateValues(props: CalculateProps) {
 
                 j += currencyCount - 1;
                 personColumn++;
+            }
+        }
+    }
+
+    for (let i = 0; i < props.transactions.length; i++) {
+        for (let j = 0; j < totalExpense.length; j++) {
+            if (totalBalance[j]["currencyId"] == props.transactions[i].currency_id && totalBalance[j]["personId"] == props.transactions[i].payer_id) {
+                totalBalance[j].amount += props.transactions[i].amount;
+            }
+            else if (totalBalance[j]["currencyId"] == props.transactions[i].currency_id && totalBalance[j]["personId"] == props.transactions[i].recipient_id) {
+                totalBalance[j].amount -= props.transactions[i].amount;
             }
         }
     }

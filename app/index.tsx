@@ -13,10 +13,12 @@ import { Colours } from "@/components/colours";
 import { Ionicons } from "@expo/vector-icons";
 
 import AddExpense from "./screens/addExpense";
+import AddTransaction from "./screens/addTransaction";
 import AddTrip from "./screens/addTrip";
 import Expenses from "./screens/expenses";
 import Home from "./screens/home";
 import Overview from "./screens/overview";
+import Transactions from "./screens/transactions";
 import Trip from "./screens/trip";
 
 const Stack = createNativeStackNavigator<ParamsList>();
@@ -35,6 +37,8 @@ export type ParamsList = {
   Expenses: { tripId: number };
   AddExpense: { tripId: number };
   Overview: { tripId: number };
+  Transactions: { tripId: number };
+  AddTransaction: { tripId: number };
 }
 
 const db = openDatabaseSync("splitzy.db");
@@ -50,6 +54,7 @@ export default function Index() {
                   <Stack.Screen name="TabNavigator" component={TabNavigator}/>
                   <Stack.Screen name="AddTrip" component={AddTrip}/>
                   <Stack.Screen name="AddExpense" component={AddExpense}/>
+                  <Stack.Screen name="AddTransaction" component={AddTransaction}/>
               </Stack.Navigator>
           </SQLiteProvider>
       </SafeAreaProvider>
@@ -94,6 +99,18 @@ function TabNavigator() {
                 options={{
                     tabBarIcon: ({focused}) => (
                         <Ionicons name="newspaper-outline" 
+                                color={focused ? active : inactive}
+                                size={size}/>
+                    )
+                }}
+            />
+            <Tab.Screen
+                name="Transactions"
+                component={Transactions}
+                initialParams={{tripId}}
+                options={{
+                    tabBarIcon: ({focused}) => (
+                        <Ionicons name="arrow-redo-outline" 
                                 color={focused ? active : inactive}
                                 size={size}/>
                     )

@@ -144,7 +144,9 @@ export async function createTrip(db: SQLiteDatabase, tripId: number) {
         );
     `);
     
-    console.log(data, "created");
+    console.log(data, "Trip Table created for trip ", tripId);
+
+    await createTransactionsTable(db, tripId);
 }
 
 interface PeopleTableTypes {
@@ -232,4 +234,42 @@ export async function updateExpenseStatus(db: SQLiteDatabase, id: number, tripId
         SET is_resolved = ${status}
         WHERE id = ${id}
     `);
+}
+
+/* Functions to store transactions */
+export async function createTransactionsTable(db: SQLiteDatabase, tripId: number) {
+    let tableName: string = "transaction_" + tripId.toString();
+    const sanitizedTableName = tableName.replace(/[^a-zA-Z0-9_]/g, ''); // Removes characters that can cause SQL injection
+
+    const data = await db.execAsync(`
+        PRAGMA journal_mode = WAL;
+        
+        CREATE TABLE IF NOT EXISTS ${sanitizedTableName} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            payer_id INTEGER REFERENCES people(id),
+            recipient_id INTEGER REFERENCES people(id),
+            amount FLOAT,
+            currency_id INTEGER REFERENCES currencies(id),
+            date DATE
+        );
+    `);
+    
+    console.log(data, "Transactions Table created for trip ", tripId);
+}
+
+export async function addTransaction(db: SQLiteDatabase, tripId: number,
+        payerId: number, recipientId: number, amount: number, currencyId: number, date: Date) {
+    let tableName: string = "transaction_" + tripId.toString();
+    await db.runAsync(`
+        INSERT INTO ${tableName} (payer_id, recipient_id, amount, currency_id, date)
+        VALUES(?, ?, ?, ?, ?);
+    `,payerId, recipientId, amount, currencyId, date.toLocaleDateString());
+
+    console.log("Transaction added for trip ", tripId);
+}
+
+export async function deleteTransaction(db: SQLiteDatabase, id: number, tripId: number) {
+    let tableName: string = "transaction_" + tripId.toString();
+    
+    await db.runAsync(`DELETE FROM ${tableName} WHERE id = ?;`, id);
 }
