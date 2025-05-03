@@ -117,6 +117,7 @@ function MainBody({tripId}: {tripId: number}) {
         <View style={{alignItems: 'center'}}>
             {(!isLoading) && 
             <View style={genericMainBodyStyles.container}>
+                <VerticalGap height={10}/>
                 <Statistics people={people} compilation={totalSpent} title="Total Paid"/>
 
                 <VerticalGap height={20}/>
