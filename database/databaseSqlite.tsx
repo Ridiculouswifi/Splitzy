@@ -261,7 +261,7 @@ export async function addTransaction(db: SQLiteDatabase, tripId: number,
         payerId: number, recipientId: number, amount: number, currencyId: number, date: Date) {
     let tableName: string = "transaction_" + tripId.toString();
     await db.runAsync(`
-        INSERT INTO ${tableName} (payer_id, recipient_id expense, currency_id, date)
+        INSERT INTO ${tableName} (payer_id, recipient_id, amount, currency_id, date)
         VALUES(?, ?, ?, ?, ?);
     `,payerId, recipientId, amount, currencyId, date.toLocaleDateString());
 

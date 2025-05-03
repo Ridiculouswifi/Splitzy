@@ -1,13 +1,14 @@
+import { GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
 import { Divider, VerticalGap } from "@/components/gap";
 import MyPicker from "@/components/picker";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
-import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
+import { addTransaction, getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { SQLiteDatabase, useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Dimensions, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
@@ -81,9 +82,6 @@ async function getData(db: SQLiteDatabase, tripId: number,
     }))
     setPeopleList(peopleList);
 }
-async function addTransaction(db: SQLiteDatabase) {
-
-}
 
 function MainBody({tripId}: {tripId: number}) {
     const db = useSQLiteContext();
@@ -91,19 +89,37 @@ function MainBody({tripId}: {tripId: number}) {
     const [currencyList, setCurrencyList] = useState<PickerProps[]>([]);
     const [peopleList, setPeopleList] = useState<PickerProps[]>([]);
 
+    const detailsRef = useRef<DetailsHandle>(null);
+
     useEffect(() => {
         getData(db, tripId, setCurrencyList, setPeopleList);
     }, [])
+
+    function pressConfirm() {
+        detailsRef.current?.add();
+    }
 
     return (
         <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView>
         <View style={genericMainBodyStyles.container}>
-            <Details tripId={tripId} currencyList={currencyList} peopleList={peopleList}/>
+            <Details tripId={tripId} currencyList={currencyList} peopleList={peopleList} db={db} ref={detailsRef}/>
 
             <VerticalGap height={20}/>
             <Divider/>
+            <VerticalGap height={20}/>
+
+            <GenericButton
+                text="Confirm" 
+                height={45} 
+                width={210} 
+                colour={Colours.confirmButton} 
+                textColour={Colours.textColor}
+                action={pressConfirm}
+                fontsize={22}/>
+            
+            <VerticalGap height={40}/>
         </View>
         </ScrollView>
         </KeyboardAvoidingView>
@@ -112,9 +128,14 @@ function MainBody({tripId}: {tripId: number}) {
 
 
 interface detailsProps {
+    db: SQLiteDatabase;
     tripId: number;
     currencyList: PickerProps[];
     peopleList: PickerProps[];
+    ref: Ref<DetailsHandle>;
+}
+type DetailsHandle = {
+    add: () => void;
 }
 const detailsStyle = StyleSheet.create({
     container: {
@@ -158,7 +179,7 @@ function Details(props: detailsProps){
     const insets = useSafeAreaInsets();
 
     const [payerId, setPayerId] = useState<number>(0);
-    const [recipientId, setrecipientId] = useState<number>(0);
+    const [recipientId, setRecipientId] = useState<number>(0);
     const [amount, setAmount] = useState<string>('');
     const [currencyId, setCurrencyId] = useState<number>(0);
     const [date, setDate] = useState<Date>(new Date());
@@ -180,19 +201,27 @@ function Details(props: detailsProps){
             setPayerIndex(0);
             setRecipientIndex(0);
             setPayerId(props.peopleList[0].value);
-            setCurrencyId(props.peopleList[0].value);
+            setRecipientId(props.peopleList[0].value);
         }
     }, [props.currencyList, props.peopleList]);
 
     useEffect(() => {
         if (props.peopleList[0] != undefined) {
             setPayerId(props.peopleList[payerIndex].value);
-            setrecipientId(props.peopleList[recipientIndex].value);
+            setRecipientId(props.peopleList[recipientIndex].value);
         }
         if (props.currencyList[0] != undefined) {
             setCurrencyId(props.currencyList[currencyIndex].value);
         }
     }, [payerIndex, recipientIndex, currencyIndex])
+
+    useImperativeHandle(props.ref, () => {
+        return {
+            add() {
+                addTransaction(props.db, props.tripId, payerId, recipientId, amount == '' ? 0 : parseFloat(amount), currencyId, date);
+            }
+        }
+    }, [payerId, recipientId, amount, currencyId, date])
 
     return (
         <View style={detailsStyle.container}>
