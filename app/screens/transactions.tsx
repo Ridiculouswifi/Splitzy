@@ -280,7 +280,9 @@ function Transaction({item, deleteTransaction, tripId}: {item: TransactionEntity
                     <Text style={transactionStyles.abbreviation}> {abbreviation}</Text>
                 </View>
                 <View style={transactionStyles.trashContainer}>
-                    <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
+                    <TouchableOpacity onPress={pressDelete}>
+                        <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
+                    </TouchableOpacity>
                 </View>
             </TouchableOpacity>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
