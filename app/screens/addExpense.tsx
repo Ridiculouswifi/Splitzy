@@ -9,7 +9,7 @@ import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/d
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Dimensions, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, KeyboardTypeOptions, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
@@ -187,14 +187,18 @@ const detailsStyle = StyleSheet.create({
         color: Colours.textColor,
     },
     pickerContainer: {
-        width: 0.25 * windowWidth,
+        width: 0.27 * windowWidth,
+        height: 0.08 * windowWidth,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        backgroundColor: Colours.backgroundV2,
+        borderRadius: 5,
+        paddingHorizontal: 8,
     },
     picker: {
         fontSize: 20,
-        width: 0.20 * windowWidth,
+        width: 0.17 * windowWidth,
         color: Colours.textColor,
     },
 })
@@ -232,11 +236,11 @@ function Details(props: detailsProps){
         <View style={detailsStyle.container}>
             <Text style={detailsStyle.title}>Details</Text>
             <VerticalGap height={20}/>
-            <Input setVariable={props.setExpenseName} variablePlaceHolder="Expense Name" width={0.8 * windowWidth}/>
+            <Input setVariable={props.setExpenseName} variablePlaceHolder="Expense Name" width={0.8 * windowWidth} keyboardType="default"/>
             <VerticalGap height={20}/>
             <View style={detailsStyle.miniContainer}>
                 <Text style={detailsStyle.payerTitle}>By</Text>
-                <Pressable style={[detailsStyle.pickerContainer, inputStyles.inputField, {width: 0.7 * windowWidth}]}
+                <Pressable style={[detailsStyle.pickerContainer, {width: 0.7 * windowWidth}]}
                         onPress={() => {setViewPayerPicker(true)}}>
                     <MyPicker isVisible={viewPayerPicker} 
                             setIsVisible={setViewPayerPicker} 
@@ -249,8 +253,8 @@ function Details(props: detailsProps){
             </View>
             <VerticalGap height={20}/>
             <View style={detailsStyle.miniContainer}>
-                <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth}/>
-                <Pressable style={[inputStyles.inputField, detailsStyle.pickerContainer]}
+                <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth} keyboardType="numeric"/>
+                <Pressable style={[detailsStyle.pickerContainer]}
                         onPress={() => {setViewCurrencyPicker(true)}}>
                     <MyPicker isVisible={viewCurrencyPicker} 
                             setIsVisible={setViewCurrencyPicker} 
@@ -271,6 +275,7 @@ interface inputProps {
     setVariable: (variable: string) => void;
     variablePlaceHolder: string;
     width: number;
+    keyboardType: KeyboardTypeOptions;
 }
 const inputStyles = StyleSheet.create({
     inputField: {
@@ -280,13 +285,14 @@ const inputStyles = StyleSheet.create({
         fontSize: 20,
     }
 })
-function Input({setVariable, variablePlaceHolder, width}: inputProps) {
+function Input({setVariable, variablePlaceHolder, width, keyboardType}: inputProps) {
     return (
         <TextInput 
             placeholder={variablePlaceHolder}
             placeholderTextColor={Colours.placeholder}
             style={[inputStyles.inputField, {width: width}]}
-            onChangeText={setVariable}/>
+            onChangeText={setVariable}
+            keyboardType={keyboardType}/>
     )
 }
 
