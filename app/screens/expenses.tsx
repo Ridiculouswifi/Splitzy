@@ -79,13 +79,22 @@ function MainBody({tripId}: {tripId: number}) {
     )
 }
 
-interface ExpenseEntity {
+interface ExpenseTableTypes {
     id: number;
     name: string;
     payer_id: number;
     expense: number;
     currency_id: number;
     date: string;
+    is_resolved: string;
+}
+interface ExpenseEntity {
+    id: number;
+    name: string;
+    payer_id: number;
+    expense: number;
+    currency_id: number;
+    date: Date;
     is_resolved: string;
 }
 const displayExpensesStyles = StyleSheet.create({
@@ -106,11 +115,17 @@ function DisplayExpenses({tripId}: {tripId: number}) {
 
     async function refetch(){
         await db.withExclusiveTransactionAsync(async () => {
-            setExpenses(
-                await db.getAllAsync<ExpenseEntity>(
-                    `SELECT * FROM ${tableName} ORDER BY date ASC`
-                )
-            );
+                const data = await db.getAllAsync<ExpenseTableTypes>(`SELECT * FROM ${tableName}`);
+                
+                let expenses: ExpenseEntity[] = [];
+                for (let i = 0; i < data.length; i++) {
+                    let newEntry: ExpenseEntity = {id: data[i].id, name: data[i].name, payer_id: data[i].payer_id, 
+                            expense: data[i].expense, currency_id: data[i].currency_id, is_resolved: data[i].is_resolved,
+                            date: new Date(data[i].date)};
+                    expenses = [...expenses, newEntry];
+                }
+
+                setExpenses(expenses);
         });
     }
 
@@ -252,7 +267,7 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
                     <VerticalGap height={5}/>
                     <Text style={expenseStyles.payer}>By: {payer}</Text>
                     <VerticalGap height={10}/>
-                    <Text style={expenseStyles.date}>{item.date}</Text>
+                    <Text style={expenseStyles.date}>{item.date?.toLocaleDateString()}</Text>
                 </View>
                 <View style={expenseStyles.rightContainer}>
                     <View style={expenseStyles.buttonsContainer}>

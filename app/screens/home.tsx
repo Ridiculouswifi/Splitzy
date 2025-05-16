@@ -176,7 +176,7 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
                     <VerticalGap height={5}/>
                     <Text style={tripStyles.location} numberOfLines={1} ellipsizeMode="tail">{location}</Text>
                     <VerticalGap height={15}/>
-                    <Text style={tripStyles.date}>{start_date} - {end_date}</Text>
+                    <Text style={tripStyles.date}>{start_date?.toLocaleDateString()} - {end_date?.toLocaleDateString()}</Text>
                     <VerticalGap height={15}/>
                 </View>
                 <View>
@@ -203,12 +203,19 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
     )
 }
 
-interface ItemEntity {
+interface ItemTableTypes {
     id: number
     trip_name: string,
     location: string,
     start_date: string,
     end_date: string,   
+}
+interface ItemEntity {
+    id: number
+    trip_name: string,
+    location: string,
+    start_date: Date,
+    end_date: Date,   
 }
 const displayTripsStyles = StyleSheet.create({
     container: {
@@ -225,11 +232,16 @@ function DisplayTrips() {
 
     async function refetch(){
         await db.withExclusiveTransactionAsync(async () => {
-            setTrips(
-                await db.getAllAsync<ItemEntity>(
-                    `SELECT * FROM trips ORDER BY start_date DESC, end_date DESC`
-                )
-            );
+            const data = await db.getAllAsync<ItemTableTypes>(`SELECT * FROM trips`);
+
+            let trips: ItemEntity[] = [];
+            for (let i = 0; i < data.length; i++) {
+                let newEntry: ItemEntity = {id: data[i].id, trip_name: data[i].trip_name, location: data[i].location,
+                        start_date: new Date(data[i].start_date), end_date: new Date(data[i].end_date)};
+                trips = [...trips, newEntry];
+            }
+
+            setTrips(trips);
         });
     }
 

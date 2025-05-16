@@ -38,7 +38,7 @@ export async function addToTrips(db: SQLiteDatabase,
         await db.runAsync(`
             INSERT INTO trips (trip_name, location, start_date, end_date)
             VAlUES(?, ?, ?, ?);
-        `, tripName, location, startDate.toLocaleDateString(), endDate.toLocaleDateString())
+        `, tripName, location, startDate.toString(), endDate.toString())
         .then(console.log);
 }
 
@@ -193,7 +193,7 @@ export async function addExpense(db: SQLiteDatabase, tripId: number,
         await db.runAsync(`
             INSERT INTO ${tableName} (name, payer_id, expense, currency_id, date, is_resolved)
             VALUES(?, ?, ?, ?, ?, ?);
-        `, expenseName, payerId, amount, currencyId, date.toLocaleDateString(), false);
+        `, expenseName, payerId, amount, currencyId, date.toString(), false);
 
         const expenseData =  await getLatestExpenseId(db, tableName) as {id: number}[];
         const expenseId = expenseData[0].id;
@@ -263,7 +263,7 @@ export async function addTransaction(db: SQLiteDatabase, tripId: number,
     await db.runAsync(`
         INSERT INTO ${tableName} (payer_id, recipient_id, amount, currency_id, date)
         VALUES(?, ?, ?, ?, ?);
-    `,payerId, recipientId, amount, currencyId, date.toLocaleDateString());
+    `,payerId, recipientId, amount, currencyId, date.toString());
 
     console.log("Transaction added for trip ", tripId);
 }
