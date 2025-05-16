@@ -45,7 +45,7 @@ export function GenericButton({ action, height, width, colour, text, fontsize, t
     return (
         <Pressable 
             style={[pressed ? genericButtonStyles.buttonPressed : genericButtonStyles.button, 
-                pressed ? {height: height, width: width - 2, backgroundColor: colour} : {height: height, width: width, backgroundColor: colour}]}
+                pressed ? {height: height, width: width/1.01, backgroundColor: colour} : {height: height, width: width, backgroundColor: colour}]}
             onPress={action}
             onPressIn={() => pressIn(setPressed)}
             onPressOut={() => pressOut(setPressed)}>
