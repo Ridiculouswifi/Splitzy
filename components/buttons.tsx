@@ -79,7 +79,7 @@ function rgbToHex(r: number, g: number, b: number): string {
 }
 
 // Factor is the percentage of lightness: eg. 0.9 is 90% of brightness left
-function darkenHexColor(hex: string, factor: number): string {
+export function darkenHexColor(hex: string, factor: number): string {
   const [r, g, b] = hexToRgb(hex).map(c => Math.round(c * factor));
   return rgbToHex(r, g, b);
 }
