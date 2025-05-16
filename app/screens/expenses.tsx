@@ -3,13 +3,14 @@ import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { SearchBar } from "@/components/searchBar";
 import { deleteExpense, getCurrency, getPerson, updateExpenseStatus } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
@@ -81,50 +82,6 @@ function MainBody({tripId}: {tripId: number}) {
             </View>
             <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase}/>
         </KeyboardAvoidingView>
-    )
-}
-
-
-const searchBarStyles = StyleSheet.create({
-    container: {
-        width: 0.9 * windowWidth,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    searchBar: {
-        flexDirection: 'row',
-        borderWidth: 1,
-        borderColor: Colours.border,
-        borderRadius: 20,
-        width: windowWidth * 0.8,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 5,
-        height: 40,
-        backgroundColor: Colours.backgroundV2,
-    },
-    input: {
-        width: windowWidth * 0.8,
-        color: Colours.textColor,
-        fontSize: 20,
-        position: 'absolute',
-        paddingLeft: 40,
-        paddingRight: 15,
-        height: 40,
-    }
-})
-function SearchBar({setKeyPhrase}: {setKeyPhrase: (variable: string) => void}) {
-    return (
-        <View style={searchBarStyles.container}>
-            <View style={searchBarStyles.searchBar}>
-                <Ionicons name="search" color={Colours.border} size={28}/>
-                <TextInput placeholder="Search" placeholderTextColor={Colours.placeholder}
-                    style={searchBarStyles.input}
-                    onChangeText={setKeyPhrase}/>
-            </View>
-            <Ionicons name="filter" color={Colours.textColor} size={28}/>
-        </View>
     )
 }
 

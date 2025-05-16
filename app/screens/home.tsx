@@ -3,6 +3,7 @@ import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { getDateKey } from "@/components/convertDate";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
+import { SearchBar } from "@/components/searchBar";
 import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -62,6 +63,9 @@ function TopSection() {
 
 function MainBody() {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+
+    const [keyPhrase, setKeyPhrase] = useState<string>("");
+
     const mainBodyStyles = StyleSheet.create({
         container: {
             flex: 1,
@@ -76,12 +80,13 @@ function MainBody() {
             elevation: 2, // for Android shadow
         },
         tripContainer: {
-            flexDirection: 'row',
             paddingHorizontal: 20,
             borderRadius: 15,
             borderBottomColor: Colours.border,
             borderBottomWidth: 2,
-            height: 0.07 * windowHeight,
+        },
+        tripTop: {
+            flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
         },
@@ -99,12 +104,22 @@ function MainBody() {
     return (
         <View style={mainBodyStyles.container}>
             <View style={mainBodyStyles.tripContainer}>
-                <Text style={mainBodyStyles.titleText}>Trips</Text>
-                <TouchableOpacity onPress={pressAddTrip}>
-                    <Ionicons name='add-outline' size={30} color={Colours.genericIcon}/>
-                </TouchableOpacity>
+                <View style={mainBodyStyles.tripTop}>
+                    <Text style={mainBodyStyles.titleText}>Trips</Text>
+                    <GenericButton 
+                        text="New"
+                        colour={Colours.confirmButton}
+                        textColour={Colours.textColor}
+                        height={40} 
+                        width={80}
+                        fontsize={23}
+                        action={pressAddTrip}/>
+                </View>
+                <VerticalGap height={10}/>
+                <SearchBar setKeyPhrase={setKeyPhrase}/>
+                <VerticalGap height={10}/>
             </View>
-            <DisplayTrips/>
+            <DisplayTrips keyPhrase={keyPhrase}/>
         </View>
     )
 }
@@ -226,7 +241,7 @@ const displayTripsStyles = StyleSheet.create({
         alignItems: 'center'
     }
 })
-function DisplayTrips() {
+function DisplayTrips({keyPhrase}: {keyPhrase: string}) {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [trips, setTrips] = useState<ItemEntity[]>([]);
@@ -283,11 +298,18 @@ function DisplayTrips() {
     return (
         <ScrollView style={displayTripsStyles.container}>
             <View style={displayTripsStyles.internalContainer}>
-            {trips.map((item) => (
-                <Trip key={item.id} item={item} deleteItem={deleteItem}/>
-            ))}
+            {trips.map((item) => {
+                if (filter(item, keyPhrase)) {
+                    return <Trip key={item.id} item={item} deleteItem={deleteItem}/>;
+                }
+                return null;
+            })}
             <VerticalGap height={40}/>
             </View>
         </ScrollView>
     )
+}
+
+function filter(expense: ItemEntity, keyPhrase: string): boolean {
+    return keyPhrase == "" || expense.trip_name.toLowerCase().includes(keyPhrase.toLowerCase());
 }
