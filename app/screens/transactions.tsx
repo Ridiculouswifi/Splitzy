@@ -1,7 +1,7 @@
 import { GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
-import { getDateDay, getDateMonth } from "@/components/convertDate";
+import { getDateMonth } from "@/components/convertDate";
 import { VerticalGap } from "@/components/gap";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { deleteTransaction, getCurrency, getPerson } from "@/database/databaseSqlite";
@@ -80,14 +80,21 @@ function MainBody({tripId}: {tripId: number}) {
     )
 }
 
-
-interface TransactionEntity {
+interface TransactionTableTypes {
     id: number;
     payer_id: number;
     recipient_id: number;
     amount: number;
     currency_id: number;
     date: string;
+}
+interface TransactionEntity {
+    id: number;
+    payer_id: number;
+    recipient_id: number;
+    amount: number;
+    currency_id: number;
+    date: Date;
 }
 const displayTransactionsStyles = StyleSheet.create({
     container: {
@@ -107,11 +114,18 @@ function DisplayTransactions({tripId}: {tripId: number}) {
 
     async function refetch(){
         await db.withExclusiveTransactionAsync(async () => {
-            setTransactions(
-                await db.getAllAsync<TransactionEntity>(
-                    `SELECT * FROM ${tableName} ORDER BY date ASC`
-                )
-            );
+            const data = await db.getAllAsync<TransactionTableTypes>(`SELECT * FROM ${tableName}`);
+
+            let transactions: TransactionEntity[] = [];
+            for (let i = 0; i < data.length; i++) {
+                let newEntry: TransactionEntity = {id: data[i].id, payer_id: data[i].payer_id, recipient_id: data[i].recipient_id, 
+                        amount: data[i].amount, currency_id: data[i].currency_id, date: new Date(data[i].date)};
+                transactions = [...transactions, newEntry];
+            }
+
+            transactions = [...transactions].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+            setTransactions(transactions);
         });
     }
 
@@ -267,8 +281,8 @@ function Transaction({item, deleteTransaction, tripId}: {item: TransactionEntity
             <VerticalGap key={item.id} height={10}/>
             <TouchableOpacity style={transactionStyles.container} activeOpacity={0.4}>
                 <View style={transactionStyles.dateContainer}>
-                    <Text style={transactionStyles.month}>{getDateMonth(item.date)}</Text>
-                    <Text style={transactionStyles.date}>{getDateDay(item.date)}</Text>
+                    <Text style={transactionStyles.month}>{getDateMonth(item.date?.getMonth())}</Text>
+                    <Text style={transactionStyles.date}>{item.date?.getDate()}</Text>
                 </View>
                 <View style={transactionStyles.directionContainer}>
                     <Text style={transactionStyles.payer} numberOfLines={1} ellipsizeMode="tail">{payer}</Text>

@@ -117,7 +117,7 @@ function MainBody({tripId}: {tripId: number}) {
         // console.log('currencies changed:', currencies);
         return unsubscribe;
     }, [navigation]);
-
+  
     useEffect(() => {
         if (people.length > 0 && currencies.length > 0) {
             calculateValues({people, currencies, expenses, transactions, setTotalSpent, setTotalExpense, setTotalBalance});

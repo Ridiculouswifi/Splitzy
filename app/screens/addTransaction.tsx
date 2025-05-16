@@ -91,11 +91,18 @@ function MainBody({tripId}: {tripId: number}) {
 
     const detailsRef = useRef<DetailsHandle>(null);
 
+    const [transactions, setTransactions] = useState<number[]>([0]);
+
     useEffect(() => {
         getData(db, tripId, setCurrencyList, setPeopleList);
     }, [])
 
     function pressConfirm() {
+        /*
+        for (let i = 0; i < transactions.length; i++) {
+            detailsRef.current[i]?.add();
+        }
+        */
         detailsRef.current?.add();
     }
 
@@ -104,7 +111,7 @@ function MainBody({tripId}: {tripId: number}) {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView>
         <View style={genericMainBodyStyles.container}>
-            <Details tripId={tripId} currencyList={currencyList} peopleList={peopleList} db={db} ref={detailsRef}/>
+            <Details tripId={tripId} currencyList={currencyList} peopleList={peopleList} db={db} ref={detailsRef}/>  
 
             <VerticalGap height={20}/>
             <Divider/>

@@ -9,7 +9,7 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
@@ -43,10 +43,12 @@ export default function Expenses() {
 
 function MainBody({tripId}: {tripId: number}) {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+
+    const [keyPhrase, setKeyPhrase] = useState<string>("");
     
     const mainBodyStyles = StyleSheet.create({
         expenseContainer: {
-            flexDirection: 'row',
+            flexDirection: 'column',
             paddingHorizontal: 20,
             paddingVertical: 15,
             borderRadius: 15,
@@ -63,7 +65,8 @@ function MainBody({tripId}: {tripId: number}) {
     }
 
     return (
-        <View style={genericMainBodyStyles.outerContainer}>
+        <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <View style={mainBodyStyles.expenseContainer}>
                 <GenericButton
                     text="New Expense" 
@@ -73,19 +76,74 @@ function MainBody({tripId}: {tripId: number}) {
                     width={300}
                     fontsize={25} 
                     action={goToAddExpense}/>
+                <VerticalGap height={10}/>
+                <SearchBar setKeyPhrase={setKeyPhrase}/>
             </View>
-            <DisplayExpenses tripId={tripId}/>
+            <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase}/>
+        </KeyboardAvoidingView>
+    )
+}
+
+
+const searchBarStyles = StyleSheet.create({
+    container: {
+        width: 0.9 * windowWidth,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    searchBar: {
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: Colours.border,
+        borderRadius: 20,
+        width: windowWidth * 0.8,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 5,
+        height: 40,
+        backgroundColor: Colours.backgroundV2,
+    },
+    input: {
+        width: windowWidth * 0.8,
+        color: Colours.textColor,
+        fontSize: 20,
+        position: 'absolute',
+        paddingLeft: 40,
+        paddingRight: 15,
+        height: 40,
+    }
+})
+function SearchBar({setKeyPhrase}: {setKeyPhrase: (variable: string) => void}) {
+    return (
+        <View style={searchBarStyles.container}>
+            <View style={searchBarStyles.searchBar}>
+                <Ionicons name="search" color={Colours.border} size={28}/>
+                <TextInput placeholder="Search" placeholderTextColor={Colours.placeholder}
+                    style={searchBarStyles.input}
+                    onChangeText={setKeyPhrase}/>
+            </View>
+            <Ionicons name="filter" color={Colours.textColor} size={28}/>
         </View>
     )
 }
 
-interface ExpenseEntity {
+interface ExpenseTableTypes {
     id: number;
     name: string;
     payer_id: number;
     expense: number;
     currency_id: number;
     date: string;
+    is_resolved: string;
+}
+interface ExpenseEntity {
+    id: number;
+    name: string;
+    payer_id: number;
+    expense: number;
+    currency_id: number;
+    date: Date;
     is_resolved: string;
 }
 const displayExpensesStyles = StyleSheet.create({
@@ -97,7 +155,12 @@ const displayExpensesStyles = StyleSheet.create({
         alignItems: 'center',
     },
 })
-function DisplayExpenses({tripId}: {tripId: number}) {
+
+function filter(expense: ExpenseEntity, keyPhrase: string): boolean {
+    return keyPhrase == "" || expense.name.toLowerCase().includes(keyPhrase.toLowerCase());
+}
+
+function DisplayExpenses({tripId, keyPhrase}: {tripId: number, keyPhrase: string}) {
     const db = useSQLiteContext ();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [expenses, setExpenses] = useState<ExpenseEntity[]>([]);
@@ -106,11 +169,19 @@ function DisplayExpenses({tripId}: {tripId: number}) {
 
     async function refetch(){
         await db.withExclusiveTransactionAsync(async () => {
-            setExpenses(
-                await db.getAllAsync<ExpenseEntity>(
-                    `SELECT * FROM ${tableName} ORDER BY date ASC`
-                )
-            );
+                const data = await db.getAllAsync<ExpenseTableTypes>(`SELECT * FROM ${tableName}`);
+                
+                let expenses: ExpenseEntity[] = [];
+                for (let i = 0; i < data.length; i++) {
+                    let newEntry: ExpenseEntity = {id: data[i].id, name: data[i].name, payer_id: data[i].payer_id, 
+                            expense: data[i].expense, currency_id: data[i].currency_id, is_resolved: data[i].is_resolved,
+                            date: new Date(data[i].date)};
+                    expenses = [...expenses, newEntry];
+                }
+
+                expenses = [...expenses].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+                setExpenses(expenses);
         });
     }
 
@@ -135,10 +206,14 @@ function DisplayExpenses({tripId}: {tripId: number}) {
     return (
         <ScrollView style={displayExpensesStyles.container}>
             <View style={displayExpensesStyles.internalContainer}>
-                {expenses.map((expense) => (
-                    <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={tripId}/>
-                ))}
-                <VerticalGap height={40}/>
+                {expenses.map((expense) => {
+                    if (filter(expense, keyPhrase)) {
+                        return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={tripId}/>;
+                    }
+                    return null;
+                }
+                )}
+                <VerticalGap height={10}/>
             </View>
         </ScrollView>
     )
@@ -252,7 +327,7 @@ function Expense({item, deleteExpense, tripId}: {item: ExpenseEntity, deleteExpe
                     <VerticalGap height={5}/>
                     <Text style={expenseStyles.payer}>By: {payer}</Text>
                     <VerticalGap height={10}/>
-                    <Text style={expenseStyles.date}>{item.date}</Text>
+                    <Text style={expenseStyles.date}>{item.date?.toLocaleDateString()}</Text>
                 </View>
                 <View style={expenseStyles.rightContainer}>
                     <View style={expenseStyles.buttonsContainer}>
