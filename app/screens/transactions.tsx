@@ -123,6 +123,8 @@ function DisplayTransactions({tripId}: {tripId: number}) {
                 transactions = [...transactions, newEntry];
             }
 
+            transactions = [...transactions].sort((a, b) => b.date.getTime() - a.date.getTime());
+
             setTransactions(transactions);
         });
     }

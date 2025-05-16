@@ -28,3 +28,7 @@ export function getDateYear(date: string): string {
     const result = date.split("/", 3);
     return result[2];
 }
+
+export function getDateKey(date: Date): string {
+    return date.toISOString().split("T")[0];
+}

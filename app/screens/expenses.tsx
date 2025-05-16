@@ -125,6 +125,8 @@ function DisplayExpenses({tripId}: {tripId: number}) {
                     expenses = [...expenses, newEntry];
                 }
 
+                expenses = [...expenses].sort((a, b) => b.date.getTime() - a.date.getTime());
+
                 setExpenses(expenses);
         });
     }
