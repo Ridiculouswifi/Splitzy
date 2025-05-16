@@ -65,6 +65,7 @@ function MainBody({tripId}: {tripId: number}) {
     const [currencyId, setCurrencyId] = useState<number>(0)
     const [date, setDate] = useState(new Date());
     const [people, setPeople] = useState<PeopleTableTypes[]>([]);
+    const [description, setDescription] = useState<string>("");
 
     const [currencyList, setCurrencyList] = useState<CurrencyPickerProps[]>([]);
     const [peopleList, setPeopleList] = useState<CurrencyPickerProps[]>([]);
@@ -201,6 +202,21 @@ const detailsStyle = StyleSheet.create({
         width: 0.17 * windowWidth,
         color: Colours.textColor,
     },
+    descriptionContainer: {
+        borderWidth: 2,
+        borderColor: Colours.inputField,
+        borderRadius: 10,
+        width: windowWidth * 0.8,
+        height: windowHeight * 0.1,
+    },
+    descriptionText: {
+        position: 'absolute',
+        width: windowWidth * 0.8 - 4,
+        height: windowHeight * 0.1 - 4,
+        padding: 5,
+        color: Colours.textColor,
+        fontSize: 20,
+    }
 })
 function Details(props: detailsProps){
     const insets = useSafeAreaInsets();
@@ -220,7 +236,6 @@ function Details(props: detailsProps){
             setPayerIndex(0);
             props.setPayerId(props.peopleList[0].value);
         }
-        console.log(props.currencyList);
     }, [props.currencyList, props.peopleList]);
 
     useEffect(() => {
@@ -235,9 +250,13 @@ function Details(props: detailsProps){
     return (
         <View style={detailsStyle.container}>
             <Text style={detailsStyle.title}>Details</Text>
+
             <VerticalGap height={20}/>
+
             <Input setVariable={props.setExpenseName} variablePlaceHolder="Expense Name" width={0.8 * windowWidth} keyboardType="default"/>
+
             <VerticalGap height={20}/>
+
             <View style={detailsStyle.miniContainer}>
                 <Text style={detailsStyle.payerTitle}>By</Text>
                 <Pressable style={[detailsStyle.pickerContainer, {width: 0.7 * windowWidth}]}
@@ -251,7 +270,9 @@ function Details(props: detailsProps){
                     <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
                 </Pressable>
             </View>
+
             <VerticalGap height={20}/>
+
             <View style={detailsStyle.miniContainer}>
                 <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth} keyboardType="numeric"/>
                 <Pressable style={[detailsStyle.pickerContainer]}
@@ -265,8 +286,18 @@ function Details(props: detailsProps){
                     <Ionicons name="caret-down-outline" size={20} color={Colours.genericIcon}/>
                 </Pressable>
             </View>
+
             <VerticalGap height={20}/>
+
             <DateInput setVariable={props.setDate} variablePlaceHolder="Date"/>
+
+            <VerticalGap height={20}/>
+
+            <View style={detailsStyle.descriptionContainer}>
+                <TextInput placeholder="Description" placeholderTextColor={Colours.placeholder}
+                    style={detailsStyle.descriptionText}
+                    multiline={true}/>
+            </View>
         </View>
     )
 }
