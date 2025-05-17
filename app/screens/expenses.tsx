@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
@@ -282,6 +283,17 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     const [abbreviation, setAbbreviation] = useState<string>('');
     const [isResolved, setIsResolved] = useState<string>('0');
 
+    // Parameters for animations
+    const startHeight: number = 90;
+    const [endHeight, setEndHeight] = useState<number>(0);
+    useEffect(() => {
+        setEndHeight(startHeight + 
+            10 +                    // Height of the gap between main upper content and collpasible content
+            (people.length * 35));  // Height of each member type
+    }, [people])
+    const height = useSharedValue(startHeight);
+    const duration: number = 300;
+
     async function getText() {
         const payerData = await getPerson(db, item.payer_id) as PeopleTableTypes[];
         setPayer(payerData[0].name);
@@ -311,13 +323,23 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     }
 
     function expand() {
+        if (!isExpanded) {
+            height.value = withTiming(endHeight, {duration: duration});
+        } else {
+            height.value = withTiming(startHeight, {duration: duration});
+        }
         setIsExpanded(!isExpanded);
     }
+
+    const expandStyle = useAnimatedStyle(() => ({
+        height: height.value
+    }))
     
     return (
         <View>
             <VerticalGap key={item.id} height={10}/>
-            <TouchableOpacity style={[expenseStyles.container]} activeOpacity={0.4} onPress={expand}>
+            <TouchableOpacity style={[expenseStyles.container]} activeOpacity={0.65} onPress={expand}>
+            <Animated.View style={expandStyle}>
                 <View style={expenseStyles.upper}>
                     <View style={expenseStyles.textContainer}>
                         <Text style={expenseStyles.expenseName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
@@ -350,14 +372,15 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
                         <VerticalGap height={1}/>
                     </View>
                 </View>
-                {isExpanded ? (
+                {isExpanded && (
                     <View>
                         <VerticalGap height={10}/>
                         {people.map((person) => (
                             <Member key={person.id} name={person.name} weight={item["person_" + person.id.toString()]}/>
                         ))}
                     </View>
-                ) : (<View></View>) }
+                )}
+            </Animated.View>
             </TouchableOpacity>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
         </View>
