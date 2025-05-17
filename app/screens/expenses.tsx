@@ -124,8 +124,25 @@ const displayExpensesStyles = StyleSheet.create({
     },
 })
 
-function filter(expense: ExpenseEntity, keyPhrase: string): boolean {
-    return keyPhrase == "" || expense.name.toLowerCase().includes(keyPhrase.toLowerCase());
+function filter(expense: ExpenseEntity, keyPhrase: string, 
+        startTime: number, compareStartTime: boolean,
+        endTime: number, compareEndTime: boolean,
+        payers: number[], comparePayer: boolean,
+        currencies: number[], compareCurrencies: boolean): boolean {
+    let matchPhrase =  keyPhrase == "" || expense.name.toLowerCase().includes(keyPhrase.toLowerCase());
+    if (compareStartTime) {
+        matchPhrase = matchPhrase || expense.date.getTime() >= startTime;
+    }
+    if (compareEndTime) {
+        matchPhrase = matchPhrase || expense.date.getTime() <= endTime;
+    }
+    if (comparePayer) {
+        matchPhrase = matchPhrase || payers.includes(expense.payer_id);
+    }
+    if (compareCurrencies) {
+        matchPhrase = matchPhrase || currencies.includes(expense.currency_id);
+    }
+    return matchPhrase;
 }
 
 function DisplayExpenses({tripId, keyPhrase}: {tripId: number, keyPhrase: string}) {
@@ -181,7 +198,7 @@ function DisplayExpenses({tripId, keyPhrase}: {tripId: number, keyPhrase: string
         <ScrollView style={displayExpensesStyles.container}>
             <View style={displayExpensesStyles.internalContainer}>
                 {expenses.map((expense) => {
-                    if (filter(expense, keyPhrase)) {
+                    if (filter(expense, keyPhrase, 0, false, 0, false, [], false, [], false)) {
                         return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={tripId} people={people}/>;
                     }
                     return null;
