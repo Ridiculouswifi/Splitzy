@@ -80,7 +80,7 @@ function MainBody({tripId}: {tripId: number}) {
                     fontsize={25} 
                     action={goToAddExpense}/>
                 <VerticalGap height={10}/>
-                <SearchBar setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
+                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
                 <FilterModal isOpen={filterOpen} closeFilter={() => setFilterOpen(false)}/>
             </View>
             <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase}/>

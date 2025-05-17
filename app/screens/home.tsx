@@ -65,6 +65,7 @@ function MainBody() {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
 
     const [keyPhrase, setKeyPhrase] = useState<string>("");
+    const [filterOpen, setFilterOpen] = useState<boolean>(false);
 
     const mainBodyStyles = StyleSheet.create({
         container: {
@@ -116,7 +117,7 @@ function MainBody() {
                         action={pressAddTrip}/>
                 </View>
                 <VerticalGap height={10}/>
-                <SearchBar setKeyPhrase={setKeyPhrase}/>
+                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
                 <VerticalGap height={10}/>
             </View>
             <DisplayTrips keyPhrase={keyPhrase}/>

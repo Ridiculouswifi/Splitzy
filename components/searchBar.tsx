@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRef } from "react";
 import { Dimensions, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { Colours } from "./colours";
 
@@ -20,6 +21,7 @@ const searchBarStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 5,
+        paddingRight: 10,
         height: 40,
         backgroundColor: Colours.backgroundV2,
     },
@@ -29,21 +31,32 @@ const searchBarStyles = StyleSheet.create({
         fontSize: 20,
         position: 'absolute',
         paddingLeft: 40,
-        paddingRight: 15,
+        paddingRight: 40,
         height: 40,
     },
     filter: {
         
     }
 })
-export function SearchBar({setKeyPhrase, openFilter}: {setKeyPhrase: (variable: string) => void, openFilter: () => void}) {
+export function SearchBar({keyPhrase, setKeyPhrase, openFilter}: {keyPhrase: string, setKeyPhrase: (variable: string) => void, openFilter: () => void}) {
+    const inputRef = useRef<TextInput>(null);
+    
     return (
         <View style={searchBarStyles.container}>
             <View style={searchBarStyles.searchBar}>
                 <Ionicons name="search" color={Colours.border} size={28}/>
                 <TextInput placeholder="Search" placeholderTextColor={Colours.placeholder}
                     style={searchBarStyles.input}
-                    onChangeText={setKeyPhrase}/>
+                    onChangeText={setKeyPhrase}
+                    ref={inputRef}/>
+                {keyPhrase.length > 0 && (
+                    <TouchableOpacity activeOpacity={0.65} onPress={() => {
+                        inputRef.current?.clear();
+                        setKeyPhrase("");
+                        }}>
+                        <Ionicons name="close-circle" color={Colours.border} size={20}/>
+                    </TouchableOpacity>
+                )}
             </View>
             <TouchableOpacity style={searchBarStyles.filter} activeOpacity={0.65} onPress={openFilter}>
                 <Ionicons name="filter" color={Colours.textColor} size={28}/>
