@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Dimensions, StyleSheet, TextInput, View } from "react-native";
+import { Dimensions, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { Colours } from "./colours";
 
 const windowWidth = Dimensions.get('window').width;
@@ -31,9 +31,12 @@ const searchBarStyles = StyleSheet.create({
         paddingLeft: 40,
         paddingRight: 15,
         height: 40,
+    },
+    filter: {
+        
     }
 })
-export function SearchBar({setKeyPhrase}: {setKeyPhrase: (variable: string) => void}) {
+export function SearchBar({setKeyPhrase, openFilter}: {setKeyPhrase: (variable: string) => void, openFilter: () => void}) {
     return (
         <View style={searchBarStyles.container}>
             <View style={searchBarStyles.searchBar}>
@@ -42,7 +45,9 @@ export function SearchBar({setKeyPhrase}: {setKeyPhrase: (variable: string) => v
                     style={searchBarStyles.input}
                     onChangeText={setKeyPhrase}/>
             </View>
-            <Ionicons name="filter" color={Colours.textColor} size={28}/>
+            <TouchableOpacity style={searchBarStyles.filter} activeOpacity={0.65} onPress={openFilter}>
+                <Ionicons name="filter" color={Colours.textColor} size={28}/>
+            </TouchableOpacity>
         </View>
     )
 }

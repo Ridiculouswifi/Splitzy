@@ -1,6 +1,7 @@
 import { darkenHexColor, GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
+import { FilterModal } from "@/components/filterModal";
 import { HorizontalGap, VerticalGap } from "@/components/gap";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { SearchBar } from "@/components/searchBar";
@@ -46,6 +47,7 @@ function MainBody({tripId}: {tripId: number}) {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
 
     const [keyPhrase, setKeyPhrase] = useState<string>("");
+    const [filterOpen, setFilterOpen] = useState<boolean>(false);
     
     const mainBodyStyles = StyleSheet.create({
         expenseContainer: {
@@ -78,7 +80,8 @@ function MainBody({tripId}: {tripId: number}) {
                     fontsize={25} 
                     action={goToAddExpense}/>
                 <VerticalGap height={10}/>
-                <SearchBar setKeyPhrase={setKeyPhrase}/>
+                <SearchBar setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
+                <FilterModal isOpen={filterOpen} closeFilter={() => setFilterOpen(false)}/>
             </View>
             <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase}/>
         </KeyboardAvoidingView>
