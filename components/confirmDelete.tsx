@@ -1,4 +1,4 @@
-import { Dimensions, Modal, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GenericButton } from "./buttons";
 import { Colours } from "./colours";
@@ -57,6 +57,7 @@ export function ConfirmDelete({isVisible, setIsVisible, confirm}: confirmDeleteP
             animationType="fade">
             <View style={confirmDeleteStyles.background}>
             <View style={confirmDeleteStyles.modalContainer}>
+                <Pressable onPress={cancel} style={StyleSheet.absoluteFill}/>
                 <View style={confirmDeleteStyles.container}>
                     <Text style={confirmDeleteStyles.text}>Confirm Delete?</Text>
                     <View style={confirmDeleteStyles.buttonContainer}>

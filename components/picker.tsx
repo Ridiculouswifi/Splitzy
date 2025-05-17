@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FlatList, Modal, StyleSheet, Text, View } from "react-native";
+import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { GenericButton } from "./buttons";
 import { Colours } from "./colours";
 import { VerticalGap } from "./gap";
@@ -57,6 +57,7 @@ export default function MyPicker({isVisible, setIsVisible, values, setIndex, ini
                 transparent={true}
                 animationType="fade">
             <View style={pickerStyles.background}>
+                <Pressable style={StyleSheet.absoluteFill} onPress={() => setIsVisible(false)}/>
                 <View style={pickerStyles.container}>
                     <GenericButton
                             text="Confirm" 

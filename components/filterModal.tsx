@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 //import Modal from 'react-native-modal';
-import { Dimensions, Modal, StyleSheet, Text, TouchableWithoutFeedback } from 'react-native';
+import { Dimensions, Modal, Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colours } from './colours';
@@ -25,6 +25,10 @@ const filterModalStyles = StyleSheet.create({
         width: 200,
         height: windowHeight,
         paddingLeft: 10,
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        shadowOffset: { width: 1, height: 1 },
+        shadowColor: '#000',
     },
     filterTitle: {
         color: Colours.textColor,
@@ -66,16 +70,13 @@ export function FilterModal({isOpen, closeFilter}: filterModalProps) {
     return (
         <Modal visible={modalVisible}
                 transparent={true}>
-            <TouchableWithoutFeedback onPress={handleClose}>
             <Animated.View style={[filterModalStyles.background, backgroundStyle]}>
-                <TouchableWithoutFeedback onPress={() => {}}>
-                <Animated.View style={[filterModalStyles.menu, menuStyle, {paddingTop: insets.top}]}>
+                <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}/>
+                <Animated.View style={[filterModalStyles.menu, menuStyle, {paddingTop: insets.top + 10}]}>
                     <Text style={filterModalStyles.filterTitle}>Filter</Text>
                 
                 </Animated.View>
-                </TouchableWithoutFeedback>
             </Animated.View>
-            </TouchableWithoutFeedback>
         </Modal>
     )
 }
