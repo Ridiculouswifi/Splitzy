@@ -286,7 +286,7 @@ const expenseStyles = StyleSheet.create({
     showMoreText: {
         color: Colours.placeholder,
         fontSize: 13,
-        width: 80,
+        width: 75,
         fontWeight: '600',
     },
 })
@@ -295,6 +295,7 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
 
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
+    const [expandMessage, setExpandMessage] = useState<boolean>(false);
     const [payer, setPayer] = useState<string>('');
     const [abbreviation, setAbbreviation] = useState<string>('');
     const [isResolved, setIsResolved] = useState<string>('0');
@@ -354,6 +355,7 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
             top.value = withTiming(startTop, {duration: duration});
             setTimeout(() => setIsExpanded(false), duration);
         }
+        setExpandMessage(!expandMessage);
     }
 
     const expandStyle = useAnimatedStyle(() => ({
@@ -417,7 +419,7 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
                 </Animated.View>
                 <VerticalGap height={5}/>
                 <Animated.View style={[expenseStyles.showMoreContainer, topStyle]}>
-                    <Text style={expenseStyles.showMoreText}>Show More</Text>
+                    <Text style={expenseStyles.showMoreText}>{expandMessage ? 'Show Less' : 'Show More'}</Text>
                     <Animated.View style={rotationStyle}>
                         <Ionicons name="chevron-down" color={Colours.placeholder} size={20}/>
                     </Animated.View>
