@@ -229,6 +229,7 @@ const expenseStyles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: 20, 
         paddingVertical: 10,
+        paddingBottom: 20,
         shadowOpacity: 0.2,
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 1 },
@@ -273,6 +274,21 @@ const expenseStyles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
     },
+    showMoreContainer: {
+        height: 20,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        position: 'absolute',
+        alignSelf: 'center',
+        top: 90,
+    },
+    showMoreText: {
+        color: Colours.placeholder,
+        fontSize: 13,
+        width: 80,
+        fontWeight: '600',
+    },
 })
 function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, deleteExpense: (id: number, tripId: number) => void | Promise<void>, tripId: number, people: PeopleTableTypes[]}) {
     const db = useSQLiteContext ();
@@ -283,16 +299,20 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     const [abbreviation, setAbbreviation] = useState<string>('');
     const [isResolved, setIsResolved] = useState<string>('0');
 
-    // Parameters for animations
+    // Parameters for collapsible animation
     const startHeight: number = 90;
-    const [endHeight, setEndHeight] = useState<number>(0);
+    const startTop: number = 100;
+    const [extension, setExtension] = useState<number>(0);
     useEffect(() => {
-        setEndHeight(startHeight + 
-            10 +                    // Height of the gap between main upper content and collpasible content
+        setExtension(10 +           // Height of the gap between main upper content and collpasible content
             (people.length * 35));  // Height of each member type
     }, [people])
     const height = useSharedValue(startHeight);
+    const top = useSharedValue(startTop);
     const duration: number = 300;
+
+    // Parameters for chevron animation
+    const degree = useSharedValue('0deg');
 
     async function getText() {
         const payerData = await getPerson(db, item.payer_id) as PeopleTableTypes[];
@@ -324,23 +344,36 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
 
     function expand() {
         if (!isExpanded) {
-            height.value = withTiming(endHeight, {duration: duration});
+            height.value = withTiming(startHeight + extension, {duration: duration});
+            degree.value = withTiming('180deg', {duration: duration});
+            top.value = withTiming(startTop + extension, {duration: duration});
+            setIsExpanded(true);
         } else {
             height.value = withTiming(startHeight, {duration: duration});
+            degree.value = withTiming('0deg', {duration: duration});
+            top.value = withTiming(startTop, {duration: duration});
+            setTimeout(() => setIsExpanded(false), duration);
         }
-        setIsExpanded(!isExpanded);
     }
 
     const expandStyle = useAnimatedStyle(() => ({
         height: height.value
+    }))
+
+    const rotationStyle = useAnimatedStyle(() => ({
+        transform: [{rotate: degree.value}]
+    }))
+
+    const topStyle = useAnimatedStyle(() => ({
+        top: top.value
     }))
     
     return (
         <View>
             <VerticalGap key={item.id} height={10}/>
             <TouchableOpacity style={[expenseStyles.container]} activeOpacity={0.65} onPress={expand}>
-            <Animated.View style={expandStyle}>
-                <View style={expenseStyles.upper}>
+                <Animated.View style={[expandStyle, {overflow: 'hidden'}]}>
+                <View style={[expenseStyles.upper]}>
                     <View style={expenseStyles.textContainer}>
                         <Text style={expenseStyles.expenseName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
                         <VerticalGap height={5}/>
@@ -372,15 +405,23 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
                         <VerticalGap height={1}/>
                     </View>
                 </View>
-                {isExpanded && (
-                    <View>
-                        <VerticalGap height={10}/>
-                        {people.map((person) => (
-                            <Member key={person.id} name={person.name} weight={item["person_" + person.id.toString()]}/>
-                        ))}
-                    </View>
-                )}
-            </Animated.View>
+                    {isExpanded && (
+                        <View>
+                            <VerticalGap height={5}/>
+                            {people.map((person) => (
+                                <Member key={person.id} name={person.name} weight={item["person_" + person.id.toString()]}/>
+                            ))}
+                            <VerticalGap height={5}/>
+                        </View>
+                    )}
+                </Animated.View>
+                <VerticalGap height={5}/>
+                <Animated.View style={[expenseStyles.showMoreContainer, topStyle]}>
+                    <Text style={expenseStyles.showMoreText}>Show More</Text>
+                    <Animated.View style={rotationStyle}>
+                        <Ionicons name="chevron-down" color={Colours.placeholder} size={20}/>
+                    </Animated.View>
+                </Animated.View>
             </TouchableOpacity>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
         </View>
