@@ -5,12 +5,13 @@ export const Colours = {
     background: '#242633',
     backgroundV2:'#3C3E4B',
     confirmButton: '#477CE5',
-    textColor: 'white',
-    genericIcon: 'white',
-    border: 'darkgrey',
+    textColor: '#ffffff', // White
+    genericIcon: '#ffffff', // White
+    border: '#a9a9a9', // Darkgrey
     cancel: '#F04040',
-    inputField: 'grey',
-    placeholder: 'dimgrey',
-    greenButton: 'limegreen', 
-    textColorLightButton: 'black',
+    inputField: '#808080', // Grey
+    placeholder: '#696969', // Dimgrey
+    greenButton: '#32cd32', // Limegreen 
+    textColorLightButton: '#000000', // Black
+    divider: '#d3d3d3' // Lightgrey
 }
