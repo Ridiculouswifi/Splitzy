@@ -124,7 +124,7 @@ function MainBody() {
     return (
         <KeyboardAvoidingView style={[genericMainBodyStyles.outerContainer, {display: 'flex'}]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView>
+        <ScrollView style={{width: windowWidth}} contentContainerStyle={{alignItems: 'center'}}>
         <View style={genericMainBodyStyles.container}>
             <Details 
                 setTripName={setTripName}

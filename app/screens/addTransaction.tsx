@@ -109,7 +109,7 @@ function MainBody({tripId}: {tripId: number}) {
     return (
         <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView>
+        <ScrollView style={{width: windowWidth}} contentContainerStyle={{alignItems: 'center'}}>
         <View style={genericMainBodyStyles.container}>
             <Details tripId={tripId} currencyList={currencyList} peopleList={peopleList} db={db} ref={detailsRef}/>  
 
