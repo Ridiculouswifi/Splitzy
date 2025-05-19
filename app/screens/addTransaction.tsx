@@ -1,5 +1,6 @@
 import { GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
+import { EntryAdded } from "@/components/entryAdded";
 import { Divider, VerticalGap } from "@/components/gap";
 import MyPicker from "@/components/picker";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
@@ -86,6 +87,9 @@ async function getData(db: SQLiteDatabase, tripId: number,
 function MainBody({tripId}: {tripId: number}) {
     const db = useSQLiteContext();
 
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [confirmMessage, setConfirmMessage] = useState<boolean>(false);
+
     const [currencyList, setCurrencyList] = useState<PickerProps[]>([]);
     const [peopleList, setPeopleList] = useState<PickerProps[]>([]);
 
@@ -97,18 +101,28 @@ function MainBody({tripId}: {tripId: number}) {
         getData(db, tripId, setCurrencyList, setPeopleList);
     }, [])
 
-    function pressConfirm() {
+    function confirmTransaction() {
         /*
         for (let i = 0; i < transactions.length; i++) {
             detailsRef.current[i]?.add();
         }
         */
+        setIsLoading(true);
         detailsRef.current?.add();
+        setConfirmMessage(true);
+        setTimeout(() => {setIsLoading(false)}, 1000);
+    }
+
+    function pressConfirm() {
+        if (!isLoading) {
+            confirmTransaction();
+        }
     }
 
     return (
         <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <EntryAdded isOpen={confirmMessage} setIsOpen={setConfirmMessage}/>
         <ScrollView style={{width: windowWidth}} contentContainerStyle={{alignItems: 'center'}}>
         <View style={genericMainBodyStyles.container}>
             <Details tripId={tripId} currencyList={currencyList} peopleList={peopleList} db={db} ref={detailsRef}/>  

@@ -1,5 +1,6 @@
 import { GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
+import { EntryAdded } from "@/components/entryAdded";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import MyPicker from "@/components/picker";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
@@ -58,6 +59,10 @@ interface PeopleTableTypes {
 }
 function MainBody({tripId}: {tripId: number}) {
     const db = useSQLiteContext();
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const [confirmMessage, setConfirmMessage] = useState<boolean>(false);
     
     const [expenseName, setExpenseName] = useState<string>('');
     const [payerId, setPayerId] = useState<number>(0);
@@ -101,9 +106,18 @@ function MainBody({tripId}: {tripId: number}) {
     }
 
     async function confirmExpense() {
-        console.log(expenseName, payerId, amount, currencyId, date);
-        console.log(people);
+        setIsLoading(true);
+        //console.log(expenseName, payerId, amount, currencyId, date);
+        //console.log(people);
         await addExpense(db, tripId, expenseName, payerId, parseFloat(amount), currencyId, date, people);
+        setConfirmMessage(true);
+        setTimeout(() => {setIsLoading(false)}, 1000);
+    }
+
+    function pressConfirm() {
+        if (!isLoading) {
+            confirmExpense();
+        }
     }
 
     useEffect(() => {
@@ -114,6 +128,7 @@ function MainBody({tripId}: {tripId: number}) {
     return (
         <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <EntryAdded isOpen={confirmMessage} setIsOpen={setConfirmMessage}/>
         <ScrollView style={{width: windowWidth}} contentContainerStyle={{alignItems: 'center'}}>
         <View style={genericMainBodyStyles.container}>
             <Details 
@@ -145,7 +160,7 @@ function MainBody({tripId}: {tripId: number}) {
                 width={210} 
                 colour={Colours.confirmButton} 
                 textColour={Colours.textColor}
-                action={confirmExpense}
+                action={pressConfirm}
                 fontsize={22}/>
             
             <VerticalGap height={40}/>
