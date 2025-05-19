@@ -1,5 +1,6 @@
 import React from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, DimensionValue, StyleSheet, View } from "react-native";
+import { Colours } from "./colours";
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -8,8 +9,6 @@ const gapStyles = StyleSheet.create({
     },
     divider: {
         borderBottomWidth: 2,
-        borderColor: 'lightgrey',
-        width: 0.9 * windowWidth,
     }
 })
 
@@ -25,8 +24,8 @@ export function HorizontalGap({width}: {width: number}) {
     )
 }
 
-export function Divider() {
+export function Divider({width = '100%', colour = Colours.divider}: {width?: DimensionValue, colour?: string}) {
     return (
-        <View style={gapStyles.divider}></View>
+        <View style={[gapStyles.divider, {width: width, borderColor: colour}]}></View>
     )
 }

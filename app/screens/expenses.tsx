@@ -1,12 +1,13 @@
 import { darkenHexColor, GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
-import { FilterModal } from "@/components/filterModal";
-import { HorizontalGap, VerticalGap } from "@/components/gap";
+import { CheckBox, FilterModal } from "@/components/filterModal";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { SearchBar } from "@/components/searchBar";
-import { deleteExpense, getCurrency, getPerson, getRelatedPeople, updateExpenseStatus } from "@/database/databaseSqlite";
+import { deleteExpense, getCurrency, getPerson, getRelatedCurrencies, getRelatedPeople, updateExpenseStatus } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
+import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
@@ -46,9 +47,46 @@ export default function Expenses() {
 
 function MainBody({tripId}: {tripId: number}) {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+    const db = useSQLiteContext ();
 
+    const [peopleList, setPeopleList] = useState<PeopleTableTypes[]>([]);
+    const [currenciesList, setCurrenciesList] = useState<CurrencyTableTypes[]>([]);
+
+    const defaultStart: Date = new Date();
+    defaultStart.setHours(0, 0, 0, 0);
+
+    const defaultEnd: Date = new Date();
+    defaultEnd.setHours(23, 59, 59, 999);
+
+    // Variables for the Filter
     const [keyPhrase, setKeyPhrase] = useState<string>("");
     const [filterOpen, setFilterOpen] = useState<boolean>(false);
+
+    const [startTime, setStartTime] = useState<Date>(defaultStart);
+    const [endTime, setEndTime] = useState<Date>(defaultEnd);
+    const [payers, setPayers] = useState<number[]>([]);
+    const [currencies, setCurrencies] = useState<number[]>([]);
+
+    const [compareStartTime, setCompareStartTime] = useState<boolean>(false);
+    const [compareEndTime, setCompareEndTime] = useState<boolean>(false);
+    const [comparePayer, setComparePayer] = useState<boolean>(false);
+    const [compareCurrency, setCompareCurrency] = useState<boolean>(false);
+
+    // Placed here to avoid resetting values when re-rendering the filter
+    const [payerChecks, setPayerChecks] = useState<boolean[]>(Array(peopleList.length).fill(false));
+    const [currencyChecks, setCurrencyChecks] = useState<boolean[]>(Array(currenciesList.length).fill(false));
+
+    async function fetchData() {
+        const peopleData = await getRelatedPeople(db, tripId) as PeopleTableTypes[];
+        const currenciesData = await getRelatedCurrencies(db, tripId) as CurrencyTableTypes[];
+
+        setPeopleList(peopleData);
+        setCurrenciesList(currenciesData);
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, []);
     
     const mainBodyStyles = StyleSheet.create({
         expenseContainer: {
@@ -82,10 +120,195 @@ function MainBody({tripId}: {tripId: number}) {
                     action={goToAddExpense}/>
                 <VerticalGap height={10}/>
                 <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
-                <FilterModal isOpen={filterOpen} closeFilter={() => setFilterOpen(false)}/>
+                <FilterModal isOpen={filterOpen} closeFilter={() => setFilterOpen(false)} 
+                child={
+                    <Filter tripId={tripId} peopleList={peopleList} currenciesList={currenciesList}
+                        compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
+                        compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
+                        comparePayer={comparePayer} setComparePayer={setComparePayer}
+                        compareCurrency={compareCurrency} setCompareCurrency={setCompareCurrency}
+                        payerChecks={payerChecks} setPayerChecks={setPayerChecks}
+                        currencyChecks={currencyChecks} setCurrencyChecks={setCurrencyChecks}
+                        startTime={startTime} setStartTime={setStartTime}
+                        endTime={endTime} setEndTime={setEndTime}
+                        setPayers={setPayers}
+                        setCurrencies={setCurrencies}
+                    />
+                }/>
             </View>
-            <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase}/>
+            <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase} people={peopleList}
+                startTime={startTime.getTime()} compareStartTime={compareStartTime}
+                endTime={endTime.getTime()} compareEndTime={compareEndTime}
+                payers={payers} comparePayers={comparePayer}
+                currencies={currencies} compareCurrencies={compareCurrency}
+            />
         </KeyboardAvoidingView>
+    )
+}
+
+interface FilterProps {
+    tripId: number
+    peopleList: PeopleTableTypes[]
+    currenciesList: CurrencyTableTypes[]
+
+    compareStartTime: boolean
+    setCompareStartTime: (variable: boolean) => void
+    compareEndTime: boolean
+    setCompareEndTime: (variable: boolean) => void
+    comparePayer: boolean
+    setComparePayer: (variable: boolean) => void
+    compareCurrency: boolean
+    setCompareCurrency: (variable: boolean) => void
+
+    payerChecks: boolean[]
+    setPayerChecks: (variable: boolean[]) => void
+    currencyChecks: boolean[]
+    setCurrencyChecks: (variable: boolean[]) => void
+
+    startTime: Date
+    setStartTime: (variable: Date) => void
+    endTime: Date
+    setEndTime: (variable: Date) => void
+    setPayers: (variable: number[]) => void
+    setCurrencies: (variable: number[]) => void
+}
+const filterStyles = StyleSheet.create({
+    container: {
+        borderWidth: 0,
+    },
+    categoryContainer: {
+        width: '100%',
+        overflow: 'hidden',
+        justifyContent: 'center',
+        paddingVertical: 10,
+    },
+    itemContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        overflow: 'hidden',
+        alignItems: 'center',
+    },
+    categoryText: {
+        color: Colours.textColor,
+        fontSize: 20,
+        fontWeight: '600',
+    },
+})
+function Filter(props: FilterProps) {
+    function setStart(event: DateTimePickerEvent, date?: Date | undefined) {
+        if (event.type == "set") {
+            date?.setHours(0, 0, 0, 0);
+            props.setStartTime(date ?? new Date());
+        }
+    }
+
+    function setEnd(event: DateTimePickerEvent, date?: Date | undefined) {
+        if (event.type == "set") {
+            date?.setHours(23, 59, 59, 999);
+            props.setEndTime(date ?? new Date());
+        }
+    }
+    
+    return (
+        <ScrollView style={filterStyles.container} bounces={false} showsVerticalScrollIndicator={false}>
+            <View style={filterStyles.categoryContainer}>
+                <View style={filterStyles.itemContainer}>
+                    <CheckBox isCheck={props.compareStartTime} setIsCheck={props.setCompareStartTime}/>
+                    <HorizontalGap width={10}/>
+                    <Text style={filterStyles.categoryText}>{'Start\nDate'}</Text>
+                    <RNDateTimePicker value={props.startTime} onChange={setStart}/>
+                </View>
+            </View>
+
+            <Divider colour={Colours.backgroundV2}/>
+
+            <View style={filterStyles.categoryContainer}>
+                <View style={filterStyles.itemContainer}>
+                    <CheckBox isCheck={props.compareEndTime} setIsCheck={props.setCompareEndTime}/>
+                    <HorizontalGap width={10}/>
+                    <Text style={filterStyles.categoryText}>{'End\nDate'}</Text>
+                    <RNDateTimePicker value={props.endTime} onChange={setEnd}/>
+                </View>
+            </View>
+
+            <Divider colour={Colours.backgroundV2}/>
+
+            <View style={filterStyles.categoryContainer}>
+                <View style={filterStyles.itemContainer}>
+                    <CheckBox isCheck={props.comparePayer} setIsCheck={props.setComparePayer}/>
+                    <HorizontalGap width={10}/>
+                    <Text style={filterStyles.categoryText}>{'Payers'}</Text>
+                </View>
+                <MappedFilter list={props.peopleList} setResult={props.setPayers}
+                    checks={props.payerChecks} setChecks={props.setPayerChecks}/>
+            </View>
+
+            <Divider colour={Colours.backgroundV2}/>
+
+            <View style={filterStyles.categoryContainer}>
+                <View style={filterStyles.itemContainer}>
+                    <CheckBox isCheck={props.compareCurrency} setIsCheck={props.setCompareCurrency}/>
+                    <HorizontalGap width={10}/>
+                    <Text style={filterStyles.categoryText}>{'Currencies'}</Text>
+                </View>
+                <MappedFilter list={props.currenciesList} setResult={props.setCurrencies}
+                    checks={props.currencyChecks} setChecks={props.setCurrencyChecks}/>
+            </View>
+        </ScrollView>
+    )
+}
+
+const payerFilterStyles = StyleSheet.create({
+    container: {
+        paddingHorizontal: 35,
+    },
+    itemContainer: {
+        flexDirection: 'row',
+    },
+    optionContainer: {
+        backgroundColor: Colours.backgroundV2,
+        width: '100%',
+        justifyContent: 'center',
+        borderRadius: 5,
+        paddingHorizontal: 7
+    },
+    optionText: {
+        color: Colours.textColor,
+        fontWeight: '500',
+        fontSize: 17,
+        overflow: 'scroll',
+    },
+})
+function MappedFilter({list, checks, setChecks, setResult}: {list: PeopleTableTypes[] | CurrencyTableTypes[], checks: boolean[], setChecks: (variable: boolean[]) => void, setResult: (variable: number[]) => void}) {
+    useEffect(() => {
+        let payers: number[] = [];
+        for (let i = 0; i < list.length; i++) {
+            if (checks[i]) {
+                payers = [...payers, list[i].id];
+            }
+        }
+        setResult(payers);
+    }, [checks])
+    
+    return (
+        <View style={payerFilterStyles.container}>
+            {list.map((item, index) => (
+                <View key={item.id}>
+                    <VerticalGap height={5}/>
+                    <View style={payerFilterStyles.itemContainer}>
+                        <CheckBox isCheck={checks[index]} setIsCheck={(variable: boolean) => {
+                            let placeHolder = [...checks];
+                            placeHolder[index] = variable;
+                            setChecks(placeHolder);
+                        }}/>
+                        <HorizontalGap width={10}/>
+                        <View style={payerFilterStyles.optionContainer}>
+                            <Text style={payerFilterStyles.optionText}>{'name' in item ? item.name : item.abbreviation}</Text>
+                        </View>
+                    </View>
+                </View>
+            ))}
+        </View>
     )
 }
 
@@ -129,35 +352,47 @@ function filter(expense: ExpenseEntity, keyPhrase: string,
         startTime: number, compareStartTime: boolean,
         endTime: number, compareEndTime: boolean,
         payers: number[], comparePayer: boolean,
-        currencies: number[], compareCurrencies: boolean): boolean {
+        currencies: number[], compareCurrency: boolean): boolean {
     let matchPhrase =  keyPhrase == "" || expense.name.toLowerCase().includes(keyPhrase.toLowerCase());
     if (compareStartTime) {
-        matchPhrase = matchPhrase || expense.date.getTime() >= startTime;
+        matchPhrase = matchPhrase && expense.date.getTime() >= startTime;
     }
     if (compareEndTime) {
-        matchPhrase = matchPhrase || expense.date.getTime() <= endTime;
+        matchPhrase = matchPhrase && expense.date.getTime() <= endTime;
     }
     if (comparePayer) {
-        matchPhrase = matchPhrase || payers.includes(expense.payer_id);
+        matchPhrase = matchPhrase && payers.includes(expense.payer_id);
     }
-    if (compareCurrencies) {
-        matchPhrase = matchPhrase || currencies.includes(expense.currency_id);
+    if (compareCurrency) {
+        matchPhrase = matchPhrase && currencies.includes(expense.currency_id);
     }
     return matchPhrase;
 }
 
-function DisplayExpenses({tripId, keyPhrase}: {tripId: number, keyPhrase: string}) {
+interface DisplayExpensesProps {
+    tripId: number 
+    keyPhrase: string
+    people: PeopleTableTypes[]
+
+    startTime: number
+    compareStartTime: boolean
+    endTime: number
+    compareEndTime: boolean
+    payers: number[]
+    comparePayers: boolean
+    currencies: number[]
+    compareCurrencies: boolean
+}
+function DisplayExpenses(props: DisplayExpensesProps) {
     const db = useSQLiteContext ();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [expenses, setExpenses] = useState<ExpenseEntity[]>([]);
-    const [people, setPeople] = useState<PeopleTableTypes[]>([]);
 
-    const tableName: string = "trip_" + tripId.toString();
+    const tableName: string = "trip_" + props.tripId.toString();
 
     async function refetch(){
         await db.withExclusiveTransactionAsync(async () => {
                 const data = await db.getAllAsync<ExpenseTableTypes>(`SELECT * FROM ${tableName}`);
-                const peopleData = await getRelatedPeople(db, tripId) as PeopleTableTypes[];
                 
                 let expenses: ExpenseEntity[] = [];
                 for (let i = 0; i < data.length; i++) {
@@ -173,7 +408,6 @@ function DisplayExpenses({tripId, keyPhrase}: {tripId: number, keyPhrase: string
                 expenses = [...expenses].sort((a, b) => b.date.getTime() - a.date.getTime());
 
                 setExpenses(expenses);
-                setPeople(peopleData);
         });
     }
 
@@ -199,8 +433,12 @@ function DisplayExpenses({tripId, keyPhrase}: {tripId: number, keyPhrase: string
         <ScrollView style={displayExpensesStyles.container}>
             <View style={displayExpensesStyles.internalContainer}>
                 {expenses.map((expense) => {
-                    if (filter(expense, keyPhrase, 0, false, 0, false, [], false, [], false)) {
-                        return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={tripId} people={people}/>;
+                    if (filter(expense, props.keyPhrase, 
+                            props.startTime, props.compareStartTime, 
+                            props.endTime, props.compareEndTime, 
+                            props.payers, props.comparePayers, 
+                            props.currencies, props.compareCurrencies)) {
+                        return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={props.tripId} people={props.people}/>;
                     }
                     return null;
                 }

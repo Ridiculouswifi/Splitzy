@@ -13,4 +13,5 @@ export const Colours = {
     placeholder: '#696969', // Dimgrey
     greenButton: '#32cd32', // Limegreen 
     textColorLightButton: '#000000', // Black
+    divider: '#d3d3d3' // Lightgrey
 }
