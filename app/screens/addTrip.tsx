@@ -357,6 +357,17 @@ const memberStyles = StyleSheet.create({
     abbreviationField: {
         width: 0.18 * windowWidth,
     },
+    defaultContainer: {
+        width: 30,
+        height: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    defaultText: {
+        color: Colours.border,
+        fontSize: 16,
+        fontWeight: '500',
+    },
 })
 interface memberProps {
     person: Person;
@@ -460,9 +471,15 @@ function Money({currency, index, deleteCurrency, updateCurrency, updateAbbreviat
     return (
         <View style={memberStyles.container}>
             <View style={memberStyles.internalContainer}>
-                <TouchableOpacity onPress={() => deleteCurrency && deleteCurrency(index)}>
-                    <Ionicons name="remove-circle-outline" size={25} color={Colours.cancel}/>
-                </TouchableOpacity>
+                <View style={memberStyles.defaultContainer}>
+                    {index == 0 ? 
+                        <Text style={memberStyles.defaultText}>Def</Text>
+                    :
+                        <TouchableOpacity onPress={() => deleteCurrency && deleteCurrency(index)}>
+                            <Ionicons name="remove-circle-outline" size={25} color={Colours.cancel}/>   
+                        </TouchableOpacity>
+                    }
+                </View>
                 <TextInput value={name} style={[memberStyles.currencyField, memberStyles.field]}
                     placeholder="Currency" placeholderTextColor={Colours.placeholder}
                     onChangeText={(newName) => {
