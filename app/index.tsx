@@ -12,7 +12,6 @@ import * as DB from "../database/databaseSqlite";
 import { Colours } from "@/components/colours";
 import { Ionicons } from "@expo/vector-icons";
 
-import { OverlayProvider } from "@/components/overlay";
 import AddExpense from "./screens/addExpense";
 import AddTransaction from "./screens/addTransaction";
 import AddTrip from "./screens/addTrip";
@@ -50,15 +49,13 @@ export default function Index() {
     return (
         <SafeAreaProvider>
             <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
-                <OverlayProvider>
-                    <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
-                        <Stack.Screen name="Home" component={Home}/>
-                        <Stack.Screen name="TabNavigator" component={TabNavigator}/>
-                        <Stack.Screen name="AddTrip" component={AddTrip}/>
-                        <Stack.Screen name="AddExpense" component={AddExpense}/>
-                        <Stack.Screen name="AddTransaction" component={AddTransaction}/>
-                    </Stack.Navigator>
-                </OverlayProvider>
+                <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
+                    <Stack.Screen name="Home" component={Home}/>
+                    <Stack.Screen name="TabNavigator" component={TabNavigator}/>
+                    <Stack.Screen name="AddTrip" component={AddTrip}/>
+                    <Stack.Screen name="AddExpense" component={AddExpense}/>
+                    <Stack.Screen name="AddTransaction" component={AddTransaction}/>
+                </Stack.Navigator>
             </SQLiteProvider>
         </SafeAreaProvider>
     );

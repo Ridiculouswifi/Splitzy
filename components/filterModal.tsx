@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 //import Modal from 'react-native-modal';
 import { Ionicons } from '@expo/vector-icons';
-import { Dimensions, Pressable, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colours } from './colours';
@@ -12,6 +12,7 @@ const windowHeight = Dimensions.get('window').height;
 const animationTime: number = 300;
 
 interface filterModalProps {
+    isOpen?: boolean,
     closeFilter: () => void,
     child: ReactNode,
 }
@@ -42,23 +43,31 @@ const filterModalStyles = StyleSheet.create({
     }
 })
 
-export function FilterModal({closeFilter, child}: filterModalProps) {
+export function FilterModal({isOpen, closeFilter, child}: filterModalProps) {
     const insets = useSafeAreaInsets();
 
-    const [rendered, setRendered] = useState<boolean>(false); // flag to render only once
+    const [modalVisible, setModalVisible] = useState<boolean>(false);
 
     const moveX = useSharedValue(235);
     const transparency = useSharedValue(0);
     
     useEffect(() => {
-            setRendered(true); // render once
+        if (isOpen) {
+            setModalVisible(true);
+        }
+    }, [isOpen])
+
+    useEffect(() => {
+        if (modalVisible) {
             moveX.value = withTiming(0, {duration: animationTime, easing: Easing.linear});
             transparency.value = withTiming(0.6, {duration: animationTime});
-    }, [])
+        }
+    }, [modalVisible])
 ;
     function handleClose() {
         moveX.value = withTiming(235, {duration: animationTime, easing: Easing.linear});
         transparency.value = withTiming(0, {duration: animationTime});
+        setTimeout(() => setModalVisible(false), animationTime);
         closeFilter();
     }
 
@@ -70,23 +79,21 @@ export function FilterModal({closeFilter, child}: filterModalProps) {
         transform: [{ translateX: moveX.value }],
     }))
 
-    if (!rendered) {
-        return null; // only mount once opened for the first time
-    }
-
     return (
-        <Animated.View style={[StyleSheet.absoluteFill, filterModalStyles.background, backgroundStyle]}>
-            <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}/>
-            <Animated.View style={[filterModalStyles.menu, menuStyle, {paddingTop: insets.top + 10}]}>
-                <Text style={filterModalStyles.filterTitle}>Filter</Text>
+        <Modal visible={modalVisible} transparent={true}>
+            <Animated.View style={[StyleSheet.absoluteFill, filterModalStyles.background, backgroundStyle]}>
+                <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}/>
+                <Animated.View style={[filterModalStyles.menu, menuStyle, {paddingTop: insets.top + 10}]}>
+                    <Text style={filterModalStyles.filterTitle}>Filter</Text>
 
-                <VerticalGap height={5}/>
-                <Divider/>
-                <Divider/>
+                    <VerticalGap height={5}/>
+                    <Divider/>
+                    <Divider/>
 
-                {child}
+                    {child}
+                </Animated.View>
             </Animated.View>
-        </Animated.View>
+        </Modal>
     )
 }
 

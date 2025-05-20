@@ -3,7 +3,6 @@ import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { CheckBox, FilterModal } from "@/components/filterModal";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import { useOverlay } from "@/components/overlay";
 import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
 import { SearchBar } from "@/components/searchBar";
 import { deleteExpense, getCurrency, getPerson, getRelatedCurrencies, getRelatedPeople, updateExpenseStatus } from "@/database/databaseSqlite";
@@ -12,7 +11,7 @@ import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/d
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
-import { JSX, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -50,8 +49,6 @@ function MainBody({tripId}: {tripId: number}) {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const db = useSQLiteContext ();
 
-    const { show, hide } = useOverlay();
-
     const [peopleList, setPeopleList] = useState<PeopleTableTypes[]>([]);
     const [currenciesList, setCurrenciesList] = useState<CurrencyTableTypes[]>([]);
 
@@ -63,6 +60,7 @@ function MainBody({tripId}: {tripId: number}) {
 
     // Variables for the Filter
     const [keyPhrase, setKeyPhrase] = useState<string>("");
+    const [filterOpen, setFilterOpen] = useState<boolean>(false);
 
     const [startTime, setStartTime] = useState<Date>(defaultStart);
     const [endTime, setEndTime] = useState<Date>(defaultEnd);
@@ -73,8 +71,6 @@ function MainBody({tripId}: {tripId: number}) {
     const [compareEndTime, setCompareEndTime] = useState<boolean>(false);
     const [comparePayer, setComparePayer] = useState<boolean>(false);
     const [compareCurrency, setCompareCurrency] = useState<boolean>(false);
-
-    const [filterComponent, setFilterComponent] = useState<JSX.Element | null>(null);
 
     // Placed here to avoid resetting values when re-rendering the filter
     const [payerChecks, setPayerChecks] = useState<boolean[]>(Array(peopleList.length).fill(false));
@@ -110,30 +106,6 @@ function MainBody({tripId}: {tripId: number}) {
         navigation.navigate("AddExpense", {tripId: tripId});
     }
 
-    useEffect(() => {
-        if (peopleList.length > 0 && currenciesList.length > 0 && !filterComponent) {
-            setFilterComponent(
-                <FilterModal closeFilter={() => {
-                    setTimeout(() => hide(), 400);
-                }} 
-                child={
-                    <Filter tripId={tripId} peopleList={peopleList} currenciesList={currenciesList}
-                        compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
-                        compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
-                        comparePayer={comparePayer} setComparePayer={setComparePayer}
-                        compareCurrency={compareCurrency} setCompareCurrency={setCompareCurrency}
-                        payerChecks={payerChecks} setPayerChecks={setPayerChecks}
-                        currencyChecks={currencyChecks} setCurrencyChecks={setCurrencyChecks}
-                        startTime={startTime} setStartTime={setStartTime}
-                        endTime={endTime} setEndTime={setEndTime}
-                        setPayers={setPayers}
-                        setCurrencies={setCurrencies}
-                    />
-                }/>
-            )
-        }
-    }, [peopleList, currenciesList])
-
     return (
         <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -147,9 +119,7 @@ function MainBody({tripId}: {tripId: number}) {
                     fontsize={25} 
                     action={goToAddExpense}/>
                 <VerticalGap height={10}/>
-                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => {
-                    show(filterComponent)
-                }}/>
+                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => {setFilterOpen(true)}}/>
             </View>
             <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase} people={peopleList}
                 startTime={startTime.getTime()} compareStartTime={compareStartTime}
@@ -157,6 +127,21 @@ function MainBody({tripId}: {tripId: number}) {
                 payers={payers} comparePayers={comparePayer}
                 currencies={currencies} compareCurrencies={compareCurrency}
             />
+            <FilterModal isOpen={filterOpen} closeFilter={() => {setFilterOpen(false)}} 
+            child={
+                <Filter tripId={tripId} peopleList={peopleList} currenciesList={currenciesList}
+                    compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
+                    compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
+                    comparePayer={comparePayer} setComparePayer={setComparePayer}
+                    compareCurrency={compareCurrency} setCompareCurrency={setCompareCurrency}
+                    payerChecks={payerChecks} setPayerChecks={setPayerChecks}
+                    currencyChecks={currencyChecks} setCurrencyChecks={setCurrencyChecks}
+                    startTime={startTime} setStartTime={setStartTime}
+                    endTime={endTime} setEndTime={setEndTime}
+                    setPayers={setPayers}
+                    setCurrencies={setCurrencies}
+                />
+            }/>
         </KeyboardAvoidingView>
     )
 }
