@@ -39,6 +39,12 @@ export default function AddTrip() {
     )
 }
 
+interface StoreValidity {
+    name: boolean,
+    location: boolean,
+    people: {name: boolean}[],
+    currencies: {name: boolean, abbreviation: boolean}[],
+}
 function MainBody() {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const db = useSQLiteContext();
@@ -47,16 +53,25 @@ function MainBody() {
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
-    const [people, setPeople] = useState<Person[]>([]);
+    const [people, setPeople] = useState<Person[]>([new Person("", 0)]);
     const [currencies, setCurrencies] = useState<Currency[]>([new Currency(0, "Singapore Dollars", "SGD")]);
 
+    // For Code Defensiveness
+    const [isValid, setIsValid] = useState<StoreValidity>({name: true, location: true, people: [{name: true}], currencies: [{name: true, abbreviation: true}]});
+ 
     function addPerson() {
         setPeople([...people, new Person("", 0)]);
+        let isValidCopy: StoreValidity = isValid;
+        isValidCopy.people = [...isValidCopy.people, {name: true}];
+        setIsValid(isValidCopy);
         console.log("Added, Number of people:", people.length);
     }
 
     function deletePerson(index: number) {
         setPeople(people.filter((_, i) => i !== index));
+        let isValidCopy: StoreValidity = isValid;
+        isValidCopy.people = isValidCopy.people.filter((_, i) => i !== index);
+        setIsValid(isValidCopy);
         console.log("Removed, Number of people:", people.length);
     }
 
@@ -76,10 +91,16 @@ function MainBody() {
 
     function addCurrency() {
         setCurrencies([...currencies, new Currency(0, "", "")]);
+        let isValidCopy: StoreValidity = isValid;
+        isValidCopy.currencies = [...isValidCopy.currencies, {name: true, abbreviation: true}];
+        setIsValid(isValidCopy);
     }
 
     function deleteCurrency(index: number) {
         setCurrencies(currencies.filter((_, i) => i !== index));
+        let isValidCopy: StoreValidity = isValid;
+        isValidCopy.currencies = isValidCopy.currencies.filter((_, i) => i !== index);
+        setIsValid(isValidCopy);
     }
 
     function updateCurrency(name: string, index: number) {
@@ -121,6 +142,60 @@ function MainBody() {
         navigation.goBack();
     }
 
+    function pressConfirm() {
+        let overallValid: boolean = true;
+        let isValidCopy: StoreValidity = {
+            ...isValid,
+            people: isValid.people.map(p => ({ ...p })),
+            currencies: isValid.currencies.map(c => ({ ...c })),
+        };
+
+        if (tripName != "") {
+            isValidCopy.name = true;
+        } else {
+            isValidCopy.name = false;
+            overallValid = false;
+        }
+
+        if (location != "") {
+            isValidCopy.location = true;
+        } else {
+            isValidCopy.location = false;
+            overallValid = false;
+        }
+
+        for (let i = 0; i < people.length; i++) {
+            if (people[i].getName() != "") {
+                isValidCopy.people[i].name = true;
+            } else {
+                isValidCopy.people[i].name = false;
+                overallValid = false;
+            }
+        }
+
+        for (let i = 0; i < currencies.length; i++) {
+            if (currencies[i].getName() != "") {
+                isValidCopy.currencies[i].name = true;
+            } else {
+                isValidCopy.currencies[i].name = false;
+                overallValid = false;
+            }
+
+            if (currencies[i].getAbbreviation() != "") {
+                isValidCopy.currencies[i].abbreviation = true;
+            } else {
+                isValidCopy.currencies[i].abbreviation = false;
+                overallValid = false;
+            }
+        }
+
+        if (overallValid) {
+            confirmDetails();
+        } else {
+            setIsValid(isValidCopy);
+        }
+    }
+
     return (
         <KeyboardAvoidingView style={[genericMainBodyStyles.outerContainer, {display: 'flex'}]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -130,7 +205,8 @@ function MainBody() {
                 setTripName={setTripName}
                 setLocation={setLocation}
                 setStartDate={setStartDate}
-                setEndDate={setEndDate}/>
+                setEndDate={setEndDate}
+                isValid={isValid}/>
 
             <VerticalGap height={20}/>
             <Divider/>
@@ -141,7 +217,8 @@ function MainBody() {
                 deletePerson={deletePerson}
                 updateName={updateName}
                 updateWeight={updateWeight}
-                people={people}/>
+                people={people}
+                isValid={isValid.people}/>
 
             <VerticalGap height={20}/>
             <Divider/>
@@ -152,7 +229,8 @@ function MainBody() {
                 deleteCurrency={deleteCurrency}
                 updateCurrency={updateCurrency}
                 updateAbbreviation={updateAbbreviation}
-                currencies={currencies}/>
+                currencies={currencies}
+                isValid={isValid.currencies}/>
 
             <VerticalGap height={20}/>
             <Divider/>
@@ -164,7 +242,7 @@ function MainBody() {
                 width={210} 
                 colour={Colours.confirmButton}
                 textColour={Colours.textColor}
-                action={confirmDetails}
+                action={pressConfirm}
                 fontsize={22}/>
             
             <VerticalGap height={40}/>
@@ -179,9 +257,10 @@ interface detailsProps {
     setLocation: (variable: string) => void;
     setStartDate: (variable: Date) => void;
     setEndDate: (variable: Date) => void;
+    isValid: StoreValidity;
 }
 
-function Details({setTripName, setLocation, setStartDate, setEndDate}: detailsProps) {
+function Details({setTripName, setLocation, setStartDate, setEndDate, isValid}: detailsProps) {
     const detailsStyle = StyleSheet.create({
         container: {
             alignItems: "center",
@@ -203,10 +282,10 @@ function Details({setTripName, setLocation, setStartDate, setEndDate}: detailsPr
         <View style={detailsStyle.container}>
             <Text style={detailsStyle.title}>Details</Text>
             <VerticalGap height={20}/>
-            <Input setVariable={setTripName} variablePlaceHolder="Trip Name"/>
-            <VerticalGap height={20}/>
-            <Input setVariable={setLocation} variablePlaceHolder="Location"/>
-            <VerticalGap height={20}/>
+            <Input setVariable={setTripName} variablePlaceHolder="Trip Name" isValid={isValid.name}/>
+            <VerticalGap height={0}/>
+            <Input setVariable={setLocation} variablePlaceHolder="Location" isValid={isValid.location}/>
+            <VerticalGap height={5}/>
             <View style={detailsStyle.miniContainer}>
                 <InputMini setVariable={setStartDate} variablePlaceHolder="Start"/>
                 <InputMini setVariable={setEndDate} variablePlaceHolder="End"/>
@@ -218,25 +297,36 @@ function Details({setTripName, setLocation, setStartDate, setEndDate}: detailsPr
 interface InputProps {
     setVariable: (variable: string) => void;
     variablePlaceHolder: string;
+    isValid: boolean;
 }
-
-function Input({ setVariable, variablePlaceHolder }: InputProps) {
-    const inputStyles = StyleSheet.create({
+const inputStyles = StyleSheet.create({
+        container: {
+            height: 50,
+        },
         inputField: {
             width: 0.8 * windowWidth,
             borderBottomWidth: 2,
-            borderColor: Colours.inputField,
             color: Colours.textColor,
             fontSize: 20,
+        },
+        requiredText: {
+            color: Colours.cancel,
+            fontSize: 14,
+            fontWeight: '500',
+            paddingLeft: 5,
+            paddingTop: 2,
         }
     })
-
+function Input({ setVariable, variablePlaceHolder, isValid }: InputProps) {  
     return (
-        <TextInput 
-            placeholder={variablePlaceHolder}
-            placeholderTextColor={Colours.placeholder}
-            style={inputStyles.inputField}
-            onChangeText={setVariable}/>
+        <View style={inputStyles.container}>
+            <TextInput 
+                placeholder={variablePlaceHolder}
+                placeholderTextColor={Colours.placeholder}
+                style={[inputStyles.inputField, {borderColor: isValid ? Colours.inputField : Colours.cancel}]}
+                onChangeText={setVariable}/>
+            {!isValid && <Text style={inputStyles.requiredText}>Required!</Text>}
+        </View>
     )
 }
 
@@ -286,8 +376,9 @@ interface displayMembersProps {
     deletePerson: (index: number) => void;
     updateName: (name: string, index: number) => void;
     updateWeight: (weight: string, index: number) => void;
+    isValid: {name: boolean}[]
 }
-function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeight}: displayMembersProps) {
+function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeight, isValid}: displayMembersProps) {
 
     const membersStyles = StyleSheet.create({
         container: {
@@ -324,7 +415,8 @@ function DisplayMembers({people, addPerson, deletePerson, updateName, updateWeig
                 <Member key={index} person={person} index={index}
                     deletePerson={deletePerson}
                     updateName={updateName}
-                    updateWeight={updateWeight}/>
+                    updateWeight={updateWeight}
+                    isValid={isValid[index]}/>
             ))}
         </View>
     )
@@ -368,6 +460,10 @@ const memberStyles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
+    requiredContainer: {
+        height: 25,
+        flexDirection: 'row',
+    },
 })
 interface memberProps {
     person: Person;
@@ -375,8 +471,9 @@ interface memberProps {
     deletePerson: (index: number) => void;
     updateName: (name: string, index: number) => void;
     updateWeight: (weight: string, index: number) => void;
+    isValid: {name: boolean}
 }
-function Member({person, index, deletePerson, updateName, updateWeight}: memberProps) {
+function Member({person, index, deletePerson, updateName, updateWeight, isValid}: memberProps) {
     const initialWeight = person.getWeight();
 
     const [name, setName] = useState<string>(person.getName());
@@ -385,10 +482,16 @@ function Member({person, index, deletePerson, updateName, updateWeight}: memberP
     return (
         <View style={memberStyles.container}>
             <View style={memberStyles.internalContainer}>
-                <TouchableOpacity onPress={() => deletePerson && deletePerson(index)}>
-                    <Ionicons name="remove-circle-outline" size={25} color={Colours.cancel}/>
-                </TouchableOpacity>
-                <TextInput value={name} style={[memberStyles.nameField, memberStyles.field]}
+                <View style={memberStyles.defaultContainer}>
+                    {index == 0 ? 
+                        <Text style={memberStyles.defaultText}>Def</Text>
+                    :
+                        <TouchableOpacity onPress={() => deletePerson && deletePerson(index)}>
+                            <Ionicons name="remove-circle-outline" size={25} color={Colours.cancel}/>   
+                        </TouchableOpacity>
+                    }
+                </View>
+                <TextInput value={name} style={[memberStyles.nameField, memberStyles.field, {borderColor: isValid.name ? Colours.inputField : Colours.cancel}]}
                     placeholder="Name" placeholderTextColor={Colours.placeholder}
                     onChangeText={(newName) => {
                         setName(newName);
@@ -403,7 +506,9 @@ function Member({person, index, deletePerson, updateName, updateWeight}: memberP
                         updateWeight(newWeight, index);
                     }}/>
             </View>
-            <VerticalGap height={10}/>
+            <View style={memberStyles.requiredContainer}>
+                {!(isValid.name) && <Text style={[inputStyles.requiredText, {position: 'absolute', left: 38}]}>Required!</Text>}
+            </View>
         </View>
     )
 }
@@ -414,8 +519,9 @@ interface displayCurrencyProps {
     deleteCurrency: (index: number) => void;
     updateCurrency: (name: string, index: number) => void;
     updateAbbreviation: (abbreviation: string, index: number) => void;
+    isValid: {name: boolean, abbreviation: boolean}[];
 }
-function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurrency, updateAbbreviation}: displayCurrencyProps) {
+function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurrency, updateAbbreviation, isValid}: displayCurrencyProps) {
     const membersStyles = StyleSheet.create({
         container: {
             alignItems: 'center',
@@ -451,7 +557,8 @@ function DisplayCurrencies({currencies, addCurrency, deleteCurrency, updateCurre
                 <Money key={index} currency={currency} index={index}
                     deleteCurrency={deleteCurrency}
                     updateCurrency={updateCurrency}
-                    updateAbbreviation={updateAbbreviation}/>
+                    updateAbbreviation={updateAbbreviation}
+                    isValid={isValid[index]}/>
             ))}
         </View>
     )
@@ -463,8 +570,9 @@ interface moneyProps {
     deleteCurrency: (index: number) => void;
     updateCurrency: (name: string, index: number) => void;
     updateAbbreviation: (abbreviation: string, index: number) => void;
+    isValid: {name: boolean, abbreviation: boolean};
 }
-function Money({currency, index, deleteCurrency, updateCurrency, updateAbbreviation}: moneyProps) {
+function Money({currency, index, deleteCurrency, updateCurrency, updateAbbreviation, isValid}: moneyProps) {
     const [name, setName] = useState<string>(currency.getName());
     const [abbreviation, setAbbreviation] = useState<string>(currency.getAbbreviation());
 
@@ -480,21 +588,24 @@ function Money({currency, index, deleteCurrency, updateCurrency, updateAbbreviat
                         </TouchableOpacity>
                     }
                 </View>
-                <TextInput value={name} style={[memberStyles.currencyField, memberStyles.field]}
+                <TextInput value={name} style={[memberStyles.currencyField, memberStyles.field, {borderColor: isValid.name ? Colours.inputField : Colours.cancel}]}
                     placeholder="Currency" placeholderTextColor={Colours.placeholder}
                     onChangeText={(newName) => {
                         setName(newName);
                         updateCurrency(newName, index);
                     }}/>
                 <TextInput value={abbreviation} 
-                    style={[memberStyles.abbreviationField, memberStyles.field]}
+                    style={[memberStyles.abbreviationField, memberStyles.field, {borderColor: isValid.abbreviation ? Colours.inputField : Colours.cancel}]}
                     placeholder="Abbreviation" placeholderTextColor={Colours.placeholder}
                     onChangeText={(newWeight) => {
                         setAbbreviation(newWeight);
                         updateAbbreviation(newWeight, index);
                     }}/>
             </View>
-            <VerticalGap height={10}/>
+            <View style={memberStyles.requiredContainer}>
+                {!(isValid.name) && <Text style={[inputStyles.requiredText, {position: 'absolute', left: 38}]}>Required!</Text>}
+                {!(isValid.abbreviation) && <Text style={[inputStyles.requiredText, {position: 'absolute', left: 241}]}>Required!</Text>}
+            </View>
         </View>
     )
 }
