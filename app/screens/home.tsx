@@ -4,6 +4,7 @@ import { ConfirmDelete } from "@/components/confirmDelete";
 import { getDateKey } from "@/components/convertDate";
 import { CheckBox, FilterModal } from "@/components/filterModal";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
+import { useOverlay } from "@/components/overlay";
 import { SearchBar } from "@/components/searchBar";
 import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
@@ -68,7 +69,6 @@ function MainBody() {
 
     // Variables for Filter
     const [keyPhrase, setKeyPhrase] = useState<string>("");
-    const [filterOpen, setFilterOpen] = useState<boolean>(false);
 
     const defaultStart: Date = new Date();
     defaultStart.setHours(0, 0, 0, 0);
@@ -80,6 +80,8 @@ function MainBody() {
     const [endTime, setEndTime] = useState<Date>(defaultEnd);
     const [compareStartTime, setCompareStartTime] = useState<boolean>(false);
     const [compareEndTime, setCompareEndTime] = useState<boolean>(false);
+
+    const { show, hide } = useOverlay();
 
     const mainBodyStyles = StyleSheet.create({
         container: {
@@ -131,22 +133,28 @@ function MainBody() {
                         action={pressAddTrip}/>
                 </View>
                 <VerticalGap height={10}/>
-                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
-                <FilterModal isOpen={filterOpen} closeFilter={() => setFilterOpen(false)}
-                child={
-                    <Filter
-                        compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
-                        compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
-                        startTime={startTime} setStartTime={setStartTime}
-                        endTime={endTime} setEndTime={setEndTime}
-                    />    
-                }/>
+                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => {
+                    show(
+                        <FilterModal closeFilter={() => {
+                            setTimeout(() => hide(), 400);
+                        }}
+                        child={
+                            <Filter
+                                compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
+                                compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
+                                startTime={startTime} setStartTime={setStartTime}
+                                endTime={endTime} setEndTime={setEndTime}
+                            />    
+                        }/>
+                    )
+                }}/>
                 <VerticalGap height={10}/>
             </View>
             <DisplayTrips keyPhrase={keyPhrase}
                 startTime={startTime.getTime()} compareStartTime={compareStartTime}
                 endTime={endTime.getTime()} compareEndTime={compareEndTime}
             />
+            
         </View>
     )
 }

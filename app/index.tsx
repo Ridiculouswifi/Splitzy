@@ -12,6 +12,7 @@ import * as DB from "../database/databaseSqlite";
 import { Colours } from "@/components/colours";
 import { Ionicons } from "@expo/vector-icons";
 
+import { OverlayProvider } from "@/components/overlay";
 import AddExpense from "./screens/addExpense";
 import AddTransaction from "./screens/addTransaction";
 import AddTrip from "./screens/addTrip";
@@ -29,36 +30,38 @@ const windowWidth = Dimensions.get('window').width;
 const windowFontScale = Dimensions.get('window').fontScale;
 
 export type ParamsList = {
-  TabNavigator: { tripId: number, tripName: string };
-  
-  Home: undefined;
-  Details: { tripId: number, tripName: string };
-  AddTrip: undefined;
-  Expenses: { tripId: number, tripName: string };
-  AddExpense: { tripId: number };
-  Overview: { tripId: number, tripName: string };
-  Transactions: { tripId: number, tripName: string };
-  AddTransaction: { tripId: number };
+    TabNavigator: { tripId: number, tripName: string };
+    
+    Home: undefined;
+    Details: { tripId: number, tripName: string };
+    AddTrip: undefined;
+    Expenses: { tripId: number, tripName: string };
+    AddExpense: { tripId: number };
+    Overview: { tripId: number, tripName: string };
+    Transactions: { tripId: number, tripName: string };
+    AddTransaction: { tripId: number };
 }
 
 const db = openDatabaseSync("splitzy.db");
 
 export default function Index() {
-  useDrizzleStudio(db);
+    useDrizzleStudio(db);
 
-  return (
-      <SafeAreaProvider>
-          <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
-              <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
-                  <Stack.Screen name="Home" component={Home}/>
-                  <Stack.Screen name="TabNavigator" component={TabNavigator}/>
-                  <Stack.Screen name="AddTrip" component={AddTrip}/>
-                  <Stack.Screen name="AddExpense" component={AddExpense}/>
-                  <Stack.Screen name="AddTransaction" component={AddTransaction}/>
-              </Stack.Navigator>
-          </SQLiteProvider>
-      </SafeAreaProvider>
-  );
+    return (
+        <SafeAreaProvider>
+            <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
+                <OverlayProvider>
+                    <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
+                        <Stack.Screen name="Home" component={Home}/>
+                        <Stack.Screen name="TabNavigator" component={TabNavigator}/>
+                        <Stack.Screen name="AddTrip" component={AddTrip}/>
+                        <Stack.Screen name="AddExpense" component={AddExpense}/>
+                        <Stack.Screen name="AddTransaction" component={AddTransaction}/>
+                    </Stack.Navigator>
+                </OverlayProvider>
+            </SQLiteProvider>
+        </SafeAreaProvider>
+    );
 }
 
 type RouteTypes = RouteProp<ParamsList, 'Overview'>;
