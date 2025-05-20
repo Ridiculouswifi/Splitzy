@@ -180,7 +180,7 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
     }
 
     function goToTrip() {
-        navigation.navigate('TabNavigator', { tripId: id });
+        navigation.navigate('TabNavigator', { tripId: id, tripName: trip_name });
     }
 
     return (

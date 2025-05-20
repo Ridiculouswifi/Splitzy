@@ -29,15 +29,15 @@ const windowWidth = Dimensions.get('window').width;
 const windowFontScale = Dimensions.get('window').fontScale;
 
 export type ParamsList = {
-  TabNavigator: { tripId: number };
+  TabNavigator: { tripId: number, tripName: string };
   
   Home: undefined;
-  Details: { tripId: number };
+  Details: { tripId: number, tripName: string };
   AddTrip: undefined;
-  Expenses: { tripId: number };
+  Expenses: { tripId: number, tripName: string };
   AddExpense: { tripId: number };
-  Overview: { tripId: number };
-  Transactions: { tripId: number };
+  Overview: { tripId: number, tripName: string };
+  Transactions: { tripId: number, tripName: string };
   AddTransaction: { tripId: number };
 }
 
@@ -61,7 +61,7 @@ export default function Index() {
   );
 }
 
-type RouteTypes = RouteProp<ParamsList>;
+type RouteTypes = RouteProp<ParamsList, 'Overview'>;
 
 const active = 'dodgerblue';
 const inactive = 'grey';
@@ -70,6 +70,7 @@ const size = 23;
 function TabNavigator() {
     const route = useRoute<RouteTypes>();
     const tripId = route.params?.tripId;
+    const tripName = route.params?.tripName;
     
     const insets = useSafeAreaInsets();
 
@@ -95,7 +96,7 @@ function TabNavigator() {
             <Tab.Screen
                 name="Overview"
                 component={Overview}
-                initialParams={{tripId}}
+                initialParams={{tripId, tripName}}
                 options={{
                     tabBarIcon: ({focused}) => (
                         <Ionicons name="newspaper-outline" 
@@ -107,7 +108,7 @@ function TabNavigator() {
             <Tab.Screen
                 name="Transactions"
                 component={Transactions}
-                initialParams={{tripId}}
+                initialParams={{tripId, tripName}}
                 options={{
                     tabBarIcon: ({focused}) => (
                         <Ionicons name="arrow-redo-outline" 
@@ -119,7 +120,7 @@ function TabNavigator() {
             <Tab.Screen
                 name="Expenses"
                 component={Expenses}
-                initialParams={{tripId}}
+                initialParams={{tripId, tripName}}
                 options={{
                     tabBarIcon: ({focused}) => (
                         <Ionicons name="card-outline" 
@@ -131,7 +132,7 @@ function TabNavigator() {
             <Tab.Screen
                 name="Details"
                 component={Trip}
-                initialParams={{tripId}}
+                initialParams={{tripId, tripName}}
                 options={{
                     tabBarIcon: ({focused}) => (
                         <Ionicons name="menu" 

@@ -22,7 +22,7 @@ const windowWidth = Dimensions.get('window').width;
 
 export default function Transactions() {
     const route = useRoute<RouteTypes>();
-    const { tripId } = route.params;
+    const { tripId, tripName } = route.params;
     
     const insets = useSafeAreaInsets();
 
@@ -36,7 +36,7 @@ export default function Transactions() {
     return (
         <View style={tripStyles.container}>
             <StatusBar barStyle={'light-content'}/>
-            <TopSection title="Trip"/>
+            <TopSection title={tripName}/>
             <MainBody tripId={tripId}/>
         </View>
     )

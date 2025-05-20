@@ -34,6 +34,8 @@ export function TopSection({title}: {title: string}) {
             color: Colours.textColor,
             shadowOpacity: 0.1,
             shadowColor: '#000',
+            width: 270,
+            textAlign: 'center',
         },
     })
     
@@ -47,7 +49,7 @@ export function TopSection({title}: {title: string}) {
                 <TouchableOpacity onPress={returnHome}>
                     <Ionicons name="chevron-back-outline" size={35} color={Colours.genericIcon}/>
                 </TouchableOpacity>
-                <Text style={topSectionStyles.titleMessage}>{title}</Text>
+                <Text style={topSectionStyles.titleMessage} ellipsizeMode="tail" numberOfLines={1}>{title}</Text>
                 <View style={{width: 35}}></View>
             </View>
         </View>

@@ -18,7 +18,7 @@ const windowFontScale = Dimensions.get('window').fontScale;
 
 export default function Trip() {
     const route = useRoute<RouteTypes>();
-    const { tripId } = route.params;
+    const { tripId, tripName } = route.params;
     const insets = useSafeAreaInsets();
     const tripStyles = StyleSheet.create({
         container: {
@@ -30,7 +30,7 @@ export default function Trip() {
     return (
         <View style={tripStyles.container}>
             <StatusBar barStyle={'light-content'}/>
-            <TopSection title="Trip"/>
+            <TopSection title={tripName}/>
             <MainBody tripId={tripId}/>
         </View>
     )
