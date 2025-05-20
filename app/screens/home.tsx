@@ -2,10 +2,12 @@ import { GenericButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { getDateKey } from "@/components/convertDate";
-import { HorizontalGap, VerticalGap } from "@/components/gap";
+import { CheckBox, FilterModal } from "@/components/filterModal";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { SearchBar } from "@/components/searchBar";
 import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
+import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
@@ -64,8 +66,20 @@ function TopSection() {
 function MainBody() {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
 
+    // Variables for Filter
     const [keyPhrase, setKeyPhrase] = useState<string>("");
     const [filterOpen, setFilterOpen] = useState<boolean>(false);
+
+    const defaultStart: Date = new Date();
+    defaultStart.setHours(0, 0, 0, 0);
+
+    const defaultEnd: Date = new Date();
+    defaultEnd.setHours(23, 59, 59, 999);
+
+    const [startTime, setStartTime] = useState<Date>(defaultStart);
+    const [endTime, setEndTime] = useState<Date>(defaultEnd);
+    const [compareStartTime, setCompareStartTime] = useState<boolean>(false);
+    const [compareEndTime, setCompareEndTime] = useState<boolean>(false);
 
     const mainBodyStyles = StyleSheet.create({
         container: {
@@ -118,10 +132,95 @@ function MainBody() {
                 </View>
                 <VerticalGap height={10}/>
                 <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
+                <FilterModal isOpen={filterOpen} closeFilter={() => setFilterOpen(false)}
+                child={
+                    <Filter
+                        compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
+                        compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
+                        startTime={startTime} setStartTime={setStartTime}
+                        endTime={endTime} setEndTime={setEndTime}
+                    />    
+                }/>
                 <VerticalGap height={10}/>
             </View>
-            <DisplayTrips keyPhrase={keyPhrase}/>
+            <DisplayTrips keyPhrase={keyPhrase}
+                startTime={startTime.getTime()} compareStartTime={compareStartTime}
+                endTime={endTime.getTime()} compareEndTime={compareEndTime}
+            />
         </View>
+    )
+}
+
+interface FilterProps {
+    compareStartTime: boolean
+    setCompareStartTime: (variable: boolean) => void
+    compareEndTime: boolean
+    setCompareEndTime: (variable: boolean) => void
+
+    startTime: Date
+    setStartTime: (variable: Date) => void
+    endTime: Date
+    setEndTime: (variable: Date) => void
+}
+const filterStyles = StyleSheet.create({
+    container: {
+        borderWidth: 0,
+    },
+    categoryContainer: {
+        width: '100%',
+        overflow: 'hidden',
+        justifyContent: 'center',
+        paddingVertical: 10,
+    },
+    itemContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        overflow: 'hidden',
+        alignItems: 'center',
+    },
+    categoryText: {
+        color: Colours.textColor,
+        fontSize: 20,
+        fontWeight: '600',
+    },
+})
+function Filter(props: FilterProps) {
+    function setStart(event: DateTimePickerEvent, date?: Date | undefined) {
+        if (event.type == "set") {
+            date?.setHours(0, 0, 0, 0);
+            props.setStartTime(date ?? new Date());
+        }
+    }
+
+    function setEnd(event: DateTimePickerEvent, date?: Date | undefined) {
+        if (event.type == "set") {
+            date?.setHours(23, 59, 59, 999);
+            props.setEndTime(date ?? new Date());
+        }
+    }
+    
+    return (
+        <ScrollView style={filterStyles.container} bounces={false} showsVerticalScrollIndicator={false}>
+            <View style={filterStyles.categoryContainer}>
+                <View style={filterStyles.itemContainer}>
+                    <CheckBox isCheck={props.compareStartTime} setIsCheck={props.setCompareStartTime}/>
+                    <HorizontalGap width={10}/>
+                    <Text style={filterStyles.categoryText}>{'Start\nDate'}</Text>
+                    <RNDateTimePicker value={props.startTime} onChange={setStart}/>
+                </View>
+            </View>
+
+            <Divider colour={Colours.backgroundV2}/>
+
+            <View style={filterStyles.categoryContainer}>
+                <View style={filterStyles.itemContainer}>
+                    <CheckBox isCheck={props.compareEndTime} setIsCheck={props.setCompareEndTime}/>
+                    <HorizontalGap width={10}/>
+                    <Text style={filterStyles.categoryText}>{'End\nDate'}</Text>
+                    <RNDateTimePicker value={props.endTime} onChange={setEnd}/>
+                </View>
+            </View>
+        </ScrollView>
     )
 }
 
@@ -242,7 +341,8 @@ const displayTripsStyles = StyleSheet.create({
         alignItems: 'center'
     }
 })
-function DisplayTrips({keyPhrase}: {keyPhrase: string}) {
+function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareEndTime}: 
+    {keyPhrase: string, startTime: number, compareStartTime: boolean, endTime: number, compareEndTime: boolean}) {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [trips, setTrips] = useState<ItemEntity[]>([]);
@@ -300,7 +400,9 @@ function DisplayTrips({keyPhrase}: {keyPhrase: string}) {
         <ScrollView style={displayTripsStyles.container}>
             <View style={displayTripsStyles.internalContainer}>
             {trips.map((item) => {
-                if (filter(item, keyPhrase)) {
+                if (filter(item, keyPhrase, 
+                        startTime, compareStartTime, 
+                        endTime, compareEndTime,)) {
                     return <Trip key={item.id} item={item} deleteItem={deleteItem}/>;
                 }
                 return null;
@@ -311,6 +413,15 @@ function DisplayTrips({keyPhrase}: {keyPhrase: string}) {
     )
 }
 
-function filter(expense: ItemEntity, keyPhrase: string): boolean {
-    return keyPhrase == "" || expense.trip_name.toLowerCase().includes(keyPhrase.toLowerCase());
+function filter(expense: ItemEntity, keyPhrase: string,
+        startTime: number, compareStartTime: boolean,
+        endTime: number, compareEndTime: boolean ): boolean {
+    let matchPhrase: boolean = keyPhrase == "" || expense.trip_name.toLowerCase().includes(keyPhrase.toLowerCase()) || expense.location.toLowerCase().includes(keyPhrase.toLowerCase());
+    if (compareStartTime) {
+        matchPhrase = matchPhrase && expense.start_date.getTime() >= startTime;
+    }
+    if (compareEndTime) {
+        matchPhrase = matchPhrase && expense.end_date.getTime() <= endTime;
+    }
+    return matchPhrase;
 }
