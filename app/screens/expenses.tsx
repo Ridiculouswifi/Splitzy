@@ -386,7 +386,10 @@ interface DisplayExpensesProps {
 function DisplayExpenses(props: DisplayExpensesProps) {
     const db = useSQLiteContext ();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
-    const [expenses, setExpenses] = useState<ExpenseEntity[]>([]);
+    const [expenses, setExpenses] = useState<ExpenseEntity[]>([{id: 0, name: "", payer_id: 0, expense: 0, currency_id: 0, date: new Date(), is_resolved: ""}]);
+
+    const [isLoadingExpenses, setIsLoadingExpenses] = useState<boolean>(true);
+    const [toShow, setToShow] = useState<boolean[]>([]);
 
     const tableName: string = "trip_" + props.tripId.toString();
 
@@ -423,24 +426,42 @@ function DisplayExpenses(props: DisplayExpensesProps) {
         return unsubscribe;
     }, [navigation]);
 
+    // Check expenses are pulled before rendering the expense module
+    useEffect(() => {
+        if (expenses.length == 0 || expenses[0].id != 0) {
+            setIsLoadingExpenses(false);
+            setToShow(Array(expenses.length).fill(true));
+        }
+        console.log("Run");
+    }, [expenses])
+
     async function deleteItem(id: number, tripId: number) {
         console.log("Deleting:", id);
         await deleteExpense(db, id, tripId);
         await refetchItems();
     }
+
+    useEffect(() => {
+        let toShowCopy: boolean[] = [...toShow];
+        for (let i = 0; i < expenses.length; i++) {
+            toShowCopy[i] = filter(expenses[i], props.keyPhrase, 
+                            props.startTime, props.compareStartTime, 
+                            props.endTime, props.compareEndTime, 
+                            props.payers, props.comparePayers, 
+                            props.currencies, props.compareCurrencies)
+        }
+        setToShow(toShowCopy);
+    }, [props.keyPhrase, 
+        props.startTime, props.compareStartTime, 
+        props.endTime, props.compareEndTime, 
+        props.payers, props.comparePayers, 
+        props.currencies, props.compareCurrencies])
     
     return (
         <ScrollView style={displayExpensesStyles.container}>
             <View style={displayExpensesStyles.internalContainer}>
-                {expenses.map((expense) => {
-                    if (filter(expense, props.keyPhrase, 
-                            props.startTime, props.compareStartTime, 
-                            props.endTime, props.compareEndTime, 
-                            props.payers, props.comparePayers, 
-                            props.currencies, props.compareCurrencies)) {
-                        return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={props.tripId} people={props.people}/>;
-                    }
-                    return null;
+                {!isLoadingExpenses && expenses.map((expense, index) => {
+                    return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={props.tripId} people={props.people} toShow={toShow[index]}/>;
                 }
                 )}
                 <VerticalGap height={10}/>
@@ -528,8 +549,11 @@ const expenseStyles = StyleSheet.create({
         fontWeight: '600',
     },
 })
-function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, deleteExpense: (id: number, tripId: number) => void | Promise<void>, tripId: number, people: PeopleTableTypes[]}) {
+function Expense({item, deleteExpense, tripId, people, toShow}: 
+        {item: ExpenseEntity, deleteExpense: (id: number, tripId: number) => void | Promise<void>, tripId: number, people: PeopleTableTypes[], toShow: boolean}) {
     const db = useSQLiteContext ();
+
+    const [isLoadingText, setIsLoadingText] = useState<boolean>(false);
 
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -539,14 +563,17 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     const [isResolved, setIsResolved] = useState<string>('0');
 
     // Parameters for collapsible animation
-    const startHeight: number = 90;
+    const startHeight: number = 0;
+    const outHeight: number = 135;
+    const openHeight: number = 90;
     const startTop: number = 100;
     const [extension, setExtension] = useState<number>(0);
     useEffect(() => {
         setExtension(10 +           // Height of the gap between main upper content and collpasible content
             (people.length * 35));  // Height of each member type
     }, [people])
-    const height = useSharedValue(startHeight);
+    const internalHeight = useSharedValue(startHeight);
+    const externalHeight = useSharedValue(startHeight);
     const top = useSharedValue(startTop);
     const duration: number = 300;
 
@@ -567,6 +594,26 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
         getText();
     }, [])
 
+    useEffect(() => {
+        if (payer.length > 0 && abbreviation.length > 0) {
+            setIsLoadingText(false);
+        }
+    }, [payer, abbreviation])
+
+    useEffect(() => {
+        if(!isLoadingText && toShow) {
+            internalHeight.value = withTiming(openHeight, {duration: duration})
+            externalHeight.value = withTiming(outHeight, {duration: duration})
+        }
+    }, [isLoadingText, toShow])
+
+    useEffect(() => {
+        if(!toShow) {
+            internalHeight.value = withTiming(startHeight, {duration: 1000})
+            externalHeight.value = withTiming(startHeight, {duration: duration})
+        }
+    }, [toShow])
+
     function pressDelete() {
         setIsVisible(true);
     }
@@ -583,12 +630,14 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
 
     function expand() {
         if (!isExpanded) {
-            height.value = withTiming(startHeight + extension, {duration: duration});
+            internalHeight.value = withTiming(openHeight + extension, {duration: duration});
+            externalHeight.value = -1;
             degree.value = withTiming('180deg', {duration: duration});
             top.value = withTiming(startTop + extension, {duration: duration});
             setIsExpanded(true);
         } else {
-            height.value = withTiming(startHeight, {duration: duration});
+            internalHeight.value = withTiming(openHeight, {duration: duration});
+            setTimeout(() => {externalHeight.value = outHeight}, duration)
             degree.value = withTiming('0deg', {duration: duration});
             top.value = withTiming(startTop, {duration: duration});
             setTimeout(() => setIsExpanded(false), duration);
@@ -597,7 +646,11 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     }
 
     const expandStyle = useAnimatedStyle(() => ({
-        height: height.value
+        height: internalHeight.value
+    }))
+
+    const openStyle = useAnimatedStyle(() => ({
+        height: externalHeight.value == 136 ? 'auto' : externalHeight.value
     }))
 
     const rotationStyle = useAnimatedStyle(() => ({
@@ -610,6 +663,8 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     
     return (
         <View>
+            {!isLoadingText && 
+            <Animated.View style={[openStyle, {overflow: 'hidden'}]}>
             <VerticalGap key={item.id} height={10}/>
             <TouchableOpacity style={[expenseStyles.container]} activeOpacity={0.65} onPress={expand}>
                 <Animated.View style={[expandStyle, {overflow: 'hidden'}]}>
@@ -664,6 +719,8 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
                 </Animated.View>
             </TouchableOpacity>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
+            </Animated.View>
+        }
         </View>
     )
 }
