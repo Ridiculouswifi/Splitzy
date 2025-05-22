@@ -486,6 +486,7 @@ interface CurrencyTableTypes {
 const expenseStyles = StyleSheet.create({
     container: {
         width: 0.95 * windowWidth,
+        height: '100%',
         borderRadius: 10,
         paddingHorizontal: 20, 
         paddingVertical: 10,
@@ -498,23 +499,23 @@ const expenseStyles = StyleSheet.create({
         backgroundColor: Colours.backgroundV2,
     },
     upper: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+
     },
     textContainer: {
-        width: 0.45 * windowWidth,
-    },
-    rightContainer: {
-        alignItems: 'flex-end',
+        minWidth: 80,
+        flex: 1,
     },
     expenseName: {
         fontSize: 25,
         fontWeight: '600',
         color: Colours.textColor,
+        width: 0.45 * windowWidth,
+        flex: 1,
     },
     payer: {
         fontSize: 17,
         color: Colours.textColor,
+        width: '100%',
     },
     date: {
         fontSize: 15,
@@ -532,16 +533,16 @@ const expenseStyles = StyleSheet.create({
     },
     buttonsContainer: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
     },
     showMoreContainer: {
-        height: 20,
+        height: 30,
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'center',
         position: 'absolute',
         alignSelf: 'center',
-        top: 90,
+        width: '100%',
+        backgroundColor: Colours.backgroundV2,
     },
     showMoreText: {
         color: Colours.placeholder,
@@ -565,16 +566,16 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
 
     // Parameters for collapsible animation
     const startHeight: number = 0;
-    const outHeight: number = 135;
-    const openHeight: number = 90;
+    const fillerHeight: number = 10;
+    const defaultHeight: number = 130;
     const startTop: number = 100;
     const [extension, setExtension] = useState<number>(0);
     useEffect(() => {
         setExtension(10 +           // Height of the gap between main upper content and collpasible content
             (people.length * 35));  // Height of each member type
     }, [people])
-    const internalHeight = useSharedValue(startHeight);
-    const externalHeight = useSharedValue(startHeight);
+    const container = useSharedValue(startHeight);
+    const filler = useSharedValue(startHeight);
     const top = useSharedValue(startTop);
     const duration: number = 300;
 
@@ -603,15 +604,15 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
 
     useEffect(() => {
         if(!isLoadingText && toShow) {
-            internalHeight.value = withTiming(openHeight, {duration: duration})
-            externalHeight.value = withTiming(outHeight, {duration: duration})
+            container.value = withTiming(defaultHeight, {duration: duration})
+            filler.value = withTiming(fillerHeight, {duration: duration})
         }
     }, [isLoadingText, toShow])
 
     useEffect(() => {
         if(!toShow) {
-            internalHeight.value = withTiming(startHeight, {duration: duration})
-            externalHeight.value = withTiming(startHeight, {duration: duration})
+            container.value = withTiming(startHeight, {duration: duration})
+            filler.value = withTiming(startHeight, {duration: duration})
         }
     }, [toShow])
 
@@ -620,8 +621,8 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
     }
 
     function confirmDelete() {
-        internalHeight.value = withTiming(startHeight, {duration: duration})
-        externalHeight.value = withTiming(startHeight, {duration: duration})
+        container.value = withTiming(startHeight, {duration: duration})
+        filler.value = withTiming(startHeight, {duration: duration})
         setTimeout(() => {
             deleteExpense && deleteExpense(item.id, tripId);
         }, duration);
@@ -635,14 +636,14 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
 
     function expand() {
         if (!isExpanded) {
-            internalHeight.value = withTiming(openHeight + extension, {duration: duration});
-            externalHeight.value = -1;
+            container.value = withTiming(defaultHeight + extension, {duration: duration});
+            filler.value = -1;
             degree.value = withTiming('180deg', {duration: duration});
             top.value = withTiming(startTop + extension, {duration: duration});
             setIsExpanded(true);
         } else {
-            internalHeight.value = withTiming(openHeight, {duration: duration});
-            setTimeout(() => {externalHeight.value = outHeight}, duration)
+            container.value = withTiming(defaultHeight, {duration: duration});
+            setTimeout(() => {filler.value = fillerHeight}, duration)
             degree.value = withTiming('0deg', {duration: duration});
             top.value = withTiming(startTop, {duration: duration});
             setTimeout(() => setIsExpanded(false), duration);
@@ -650,12 +651,12 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
         setExpandMessage(!expandMessage);
     }
 
-    const expandStyle = useAnimatedStyle(() => ({
-        height: internalHeight.value
+    const containerStyle = useAnimatedStyle(() => ({
+        height: container.value
     }))
 
-    const openStyle = useAnimatedStyle(() => ({
-        height: externalHeight.value == 136 ? 'auto' : externalHeight.value
+    const fillerStyle = useAnimatedStyle(() => ({
+        height: filler.value
     }))
 
     const rotationStyle = useAnimatedStyle(() => ({
@@ -668,21 +669,15 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
     
     return (
         <View>
-            {!isLoadingText && 
-            <Animated.View style={[openStyle, {overflow: 'hidden'}]}>
-            <VerticalGap key={item.id} height={10}/>
+            {!isLoadingText && <View>
+            <Animated.View style={[fillerStyle, {overflow: 'hidden'}]}>
+                <VerticalGap key={item.id} height={10}/>
+            </Animated.View>
+            <Animated.View style={[containerStyle, {overflow: 'hidden'}]}>
             <TouchableOpacity style={[expenseStyles.container]} activeOpacity={0.65} onPress={expand}>
-                <Animated.View style={[expandStyle, {overflow: 'hidden'}]}>
-                <View style={[expenseStyles.upper]}>
-                    <View style={expenseStyles.textContainer}>
+                <View style={[expenseStyles.upper, {height: 90}]}>
+                    <View style={{flexDirection: 'row', width: '100%'}}>
                         <Text style={expenseStyles.expenseName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
-                        <VerticalGap height={5}/>
-                        <Text style={expenseStyles.payer}>By: {payer}</Text>
-                        <VerticalGap height={10}/>
-                        <Text style={expenseStyles.date}>{item.date?.toLocaleDateString()}</Text>
-                        <VerticalGap height={5}/>
-                    </View>
-                    <View style={expenseStyles.rightContainer}>
                         <View style={expenseStyles.buttonsContainer}>
                             <GenericButton
                                 text="Resolved" 
@@ -697,25 +692,37 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
                                 <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
                             </TouchableOpacity>
                         </View>
-                        <VerticalGap height={15}/>
+                    </View>
+
+                    <VerticalGap height={5}/>
+
+                    <View style={{width: '100%', height: 55, flexDirection: 'row', justifyContent: 'space-between'}}>
+                        <View style={expenseStyles.textContainer}>
+                            <Text style={expenseStyles.payer} numberOfLines={1} ellipsizeMode="tail">By: {payer}</Text>
+                            <VerticalGap height={10}/>
+                            <Text style={expenseStyles.date}>{item.date?.toLocaleDateString()}</Text>
+                            <VerticalGap height={5}/>
+                        </View>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
                             <Text style={expenseStyles.amount}>{item.expense.toFixed(2)}</Text>
                             <Text style={expenseStyles.abbreviation}> {abbreviation}</Text>
                         </View>
-                        <VerticalGap height={1}/>
                     </View>
+                    
                 </View>
-                    {isExpanded && (
-                        <View>
-                            <VerticalGap height={5}/>
-                            {people.map((person) => (
-                                <Member key={person.id} name={person.name} weight={item["person_" + person.id.toString()]}/>
-                            ))}
-                            <VerticalGap height={5}/>
-                        </View>
-                    )}
-                </Animated.View>
+
+                {isExpanded && (
+                    <View>
+                        <VerticalGap height={5}/>
+                        {people.map((person) => (
+                            <Member key={person.id} name={person.name} weight={item["person_" + person.id.toString()]}/>
+                        ))}
+                        <VerticalGap height={5}/>
+                    </View>
+                )}
+
                 <VerticalGap height={5}/>
+                
                 <Animated.View style={[expenseStyles.showMoreContainer, topStyle]}>
                     <Text style={expenseStyles.showMoreText}>{expandMessage ? 'Show Less' : 'Show More'}</Text>
                     <Animated.View style={rotationStyle}>
@@ -725,7 +732,7 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
             </TouchableOpacity>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
             </Animated.View>
-        }
+        </View>}
         </View>
     )
 }
