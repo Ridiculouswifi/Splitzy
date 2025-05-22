@@ -434,7 +434,6 @@ function DisplayExpenses(props: DisplayExpensesProps) {
             setIsLoadingExpenses(false);
             setToShow(Array(expenses.length).fill(true));
         }
-        console.log("Run");
     }, [expenses])
 
     async function deleteItem(id: number, tripId: number) {
@@ -611,7 +610,7 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
 
     useEffect(() => {
         if(!toShow) {
-            internalHeight.value = withTiming(startHeight, {duration: 1000})
+            internalHeight.value = withTiming(startHeight, {duration: duration})
             externalHeight.value = withTiming(startHeight, {duration: duration})
         }
     }, [toShow])
@@ -621,7 +620,11 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
     }
 
     function confirmDelete() {
-        deleteExpense && deleteExpense(item.id, tripId);
+        internalHeight.value = withTiming(startHeight, {duration: duration})
+        externalHeight.value = withTiming(startHeight, {duration: duration})
+        setTimeout(() => {
+            deleteExpense && deleteExpense(item.id, tripId);
+        }, duration);
         setIsVisible(false);
     }
 
