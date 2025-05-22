@@ -1,24 +1,19 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import { Dimensions } from "react-native";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { openDatabaseSync, SQLiteProvider } from "expo-sqlite";
 import * as DB from "../database/databaseSqlite";
 
-import { Colours } from "@/components/colours";
-import { Ionicons } from "@expo/vector-icons";
 
 import AddExpense from "./screens/addExpense";
 import AddTransaction from "./screens/addTransaction";
 import AddTrip from "./screens/addTrip";
-import Expenses from "./screens/expenses";
 import Home from "./screens/home";
-import Overview from "./screens/overview";
-import Transactions from "./screens/transactions";
 import Trip from "./screens/trip";
 
 const Stack = createNativeStackNavigator<ParamsList>();
@@ -30,6 +25,7 @@ const windowFontScale = Dimensions.get('window').fontScale;
 
 export type ParamsList = {
     TabNavigator: { tripId: number, tripName: string };
+    Trip: { tripId: number, tripName: string };
     
     Home: undefined;
     Details: { tripId: number, tripName: string };
@@ -51,7 +47,7 @@ export default function Index() {
             <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
                 <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
                     <Stack.Screen name="Home" component={Home}/>
-                    <Stack.Screen name="TabNavigator" component={TabNavigator}/>
+                    <Stack.Screen name="Trip" component={Trip}/>
                     <Stack.Screen name="AddTrip" component={AddTrip}/>
                     <Stack.Screen name="AddExpense" component={AddExpense}/>
                     <Stack.Screen name="AddTransaction" component={AddTransaction}/>
@@ -67,6 +63,7 @@ const active = 'dodgerblue';
 const inactive = 'grey';
 const size = 23;
 
+/*
 function TabNavigator() {
     const route = useRoute<RouteTypes>();
     const tripId = route.params?.tripId;
@@ -131,7 +128,7 @@ function TabNavigator() {
             />
             <Tab.Screen
                 name="Details"
-                component={Trip}
+                component={Details}
                 initialParams={{tripId, tripName}}
                 options={{
                     tabBarIcon: ({focused}) => (
@@ -144,3 +141,4 @@ function TabNavigator() {
         </Tab.Navigator>
     )
 }
+*/

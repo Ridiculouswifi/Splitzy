@@ -3,15 +3,15 @@ import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { getDateMonth } from "@/components/convertDate";
 import { VerticalGap } from "@/components/gap";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { genericMainBodyStyles } from "@/components/screenTitle";
 import { deleteTransaction, getCurrency, getPerson } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Transactions">;
@@ -20,34 +20,14 @@ type RouteTypes = RouteProp<ParamsList, "Transactions">;
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
-export default function Transactions() {
-    const route = useRoute<RouteTypes>();
-    const { tripId, tripName } = route.params;
-    
-    const insets = useSafeAreaInsets();
-
-    const tripStyles = StyleSheet.create({
-        container: {
-            paddingTop: insets.top,
-            backgroundColor: Colours.title,
-            flex: 1,
-        }
-    })
-    return (
-        <View style={tripStyles.container}>
-            <StatusBar barStyle={'light-content'}/>
-            <TopSection title={tripName}/>
-            <MainBody tripId={tripId}/>
-        </View>
-    )
-}
-
-function MainBody({tripId}: {tripId: number}) {
+export default function Transactions({tripId, isActive, isClose, animationTime}: {tripId: number, isActive: boolean, isClose: boolean, animationTime: number}) {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+
+    const translate = useSharedValue(windowHeight);
     
     const mainBodyStyles = StyleSheet.create({
         expenseContainer: {
-            flexDirection: 'row',
+            flexDirection: 'column',
             paddingHorizontal: 20,
             paddingVertical: 15,
             borderRadius: 15,
@@ -63,8 +43,20 @@ function MainBody({tripId}: {tripId: number}) {
         navigation.navigate("AddTransaction", {tripId: tripId});
     }
 
+    useEffect(() => {
+            if (!isClose) {
+                translate.value = withTiming(0, {duration: animationTime});
+            } else {
+                translate.value = withTiming(windowHeight, {duration: animationTime});
+            }
+        }, [isClose])
+    
+        const expandStyle = useAnimatedStyle(() => ({
+            transform: [{translateY: translate.value}]
+        }))
+
     return (
-        <View style={genericMainBodyStyles.outerContainer}>
+        <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
             <View style={mainBodyStyles.expenseContainer}>
                 <GenericButton
                     text="New Transaction" 
@@ -75,8 +67,8 @@ function MainBody({tripId}: {tripId: number}) {
                     fontsize={25} 
                     action={goToAddTransaction}/>
             </View>
-            <DisplayTransactions tripId={tripId}/>
-        </View>
+            <DisplayTransactions tripId={tripId} isActive={isActive}/>
+        </Animated.View>
     )
 }
 
@@ -105,7 +97,7 @@ const displayTransactionsStyles = StyleSheet.create({
         alignItems: 'center',
     },
 })
-function DisplayTransactions({tripId}: {tripId: number}) {
+function DisplayTransactions({tripId, isActive}: {tripId: number, isActive: boolean}) {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
@@ -135,11 +127,14 @@ function DisplayTransactions({tripId}: {tripId: number}) {
     }, [db])
 
     useEffect(() => {
+        if (isActive) {
+            refetchItems();
+        }
         const unsubscribe = navigation.addListener('focus', () => {
             refetchItems();
         });
         return unsubscribe;
-    }, [navigation]);
+    }, [navigation, isActive]);
 
     async function deleteItem(id: number, tripId: number) {
         console.log("Deleting:", id);

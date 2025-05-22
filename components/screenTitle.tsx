@@ -65,7 +65,6 @@ export const genericMainBodyStyles = StyleSheet.create({
         paddingTop: 15,
     },
     outerContainer: {
-        flex: 1,
         backgroundColor: Colours.background,
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
@@ -75,5 +74,6 @@ export const genericMainBodyStyles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2, // for Android shadow
         alignItems: 'center',
+        height: '100%'
     },
 })

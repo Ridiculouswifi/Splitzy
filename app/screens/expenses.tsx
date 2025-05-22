@@ -3,54 +3,35 @@ import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { CheckBox, FilterModal } from "@/components/filterModal";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { genericMainBodyStyles } from "@/components/screenTitle";
 import { SearchBar } from "@/components/searchBar";
 import { deleteExpense, getCurrency, getPerson, getRelatedCurrencies, getRelatedPeople, updateExpenseStatus } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Expenses">;
+type BottomTabNavigatorTypes = BottomTabNavigationProp<ParamsList, "Expenses">;
 type RouteTypes = RouteProp<ParamsList, "Expenses">;
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
-export default function Expenses() {
-    const route = useRoute<RouteTypes>();
-    const { tripId, tripName } = route.params;
-    
-    const insets = useSafeAreaInsets();
-
-    const tripStyles = StyleSheet.create({
-        container: {
-            paddingTop: insets.top,
-            backgroundColor: Colours.title,
-            flex: 1,
-        }
-    })
-    return (
-        <View style={tripStyles.container}>
-            <StatusBar barStyle={'light-content'}/>
-            <TopSection title={tripName}/>
-            <MainBody tripId={tripId}/>
-        </View>
-    )
-}
-
-function MainBody({tripId}: {tripId: number}) {
-    const navigation = useNavigation<NativeStackNavigatorTypes>();
+export default function Expenses({tripId, isActive, isClose, animationTime}: {tripId: number, isActive: boolean, isClose: boolean, animationTime: number}) {
+    const navigation = useNavigation<BottomTabNavigatorTypes>();
     const db = useSQLiteContext ();
 
     const [peopleList, setPeopleList] = useState<PeopleTableTypes[]>([]);
     const [currenciesList, setCurrenciesList] = useState<CurrencyTableTypes[]>([]);
+
+    const translate = useSharedValue(windowHeight);
 
     const defaultStart: Date = new Date();
     defaultStart.setHours(0, 0, 0, 0);
@@ -106,9 +87,23 @@ function MainBody({tripId}: {tripId: number}) {
         navigation.navigate("AddExpense", {tripId: tripId});
     }
 
+    useEffect(() => {
+        if (!isClose) {
+            translate.value = withTiming(0, {duration: animationTime});
+        } else {
+            translate.value = withTiming(windowHeight, {duration: animationTime});
+        }
+    }, [isClose])
+
+    const expandStyle = useAnimatedStyle(() => ({
+        transform: [{translateY: translate.value}]
+    }))
+
     return (
-        <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
+        <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
+        <KeyboardAvoidingView style={{flex: 1}}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
             <View style={mainBodyStyles.expenseContainer}>
                 <GenericButton
                     text="New Expense" 
@@ -121,7 +116,7 @@ function MainBody({tripId}: {tripId: number}) {
                 <VerticalGap height={10}/>
                 <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => {setFilterOpen(true)}}/>
             </View>
-            <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase} people={peopleList}
+            <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase} people={peopleList} isActive={isActive}
                 startTime={startTime.getTime()} compareStartTime={compareStartTime}
                 endTime={endTime.getTime()} compareEndTime={compareEndTime}
                 payers={payers} comparePayers={comparePayer}
@@ -142,7 +137,9 @@ function MainBody({tripId}: {tripId: number}) {
                     setCurrencies={setCurrencies}
                 />
             }/>
+            </Animated.View>
         </KeyboardAvoidingView>
+        </Animated.View>
     )
 }
 
@@ -374,6 +371,8 @@ interface DisplayExpensesProps {
     keyPhrase: string
     people: PeopleTableTypes[]
 
+    isActive: boolean
+
     startTime: number
     compareStartTime: boolean
     endTime: number
@@ -420,6 +419,9 @@ function DisplayExpenses(props: DisplayExpensesProps) {
     }, [db])
 
     useEffect(() => {
+        if (props.isActive) {
+            refetchItems();
+        }
         const unsubscribe = navigation.addListener('focus', () => {
             refetchItems();
         });

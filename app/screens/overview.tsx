@@ -1,14 +1,14 @@
 import { ToggleButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
 import { Divider, VerticalGap } from "@/components/gap";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { genericMainBodyStyles } from "@/components/screenTitle";
 import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Overview">;
@@ -17,26 +17,6 @@ type RouteTypes = RouteProp<ParamsList, "Overview">;
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 const windowFontScale = Dimensions.get('window').fontScale;
-
-export default function Overview() {
-    const route = useRoute<RouteTypes>();
-    const { tripId, tripName } = route.params;
-    const insets = useSafeAreaInsets();
-    const tripStyles = StyleSheet.create({
-        container: {
-            paddingTop: insets.top,
-            backgroundColor: Colours.title,
-            flex: 1,
-        }
-    })
-    return (
-        <View style={tripStyles.container}>
-            <StatusBar barStyle={'light-content'}/>
-            <TopSection title={tripName}/>
-            <MainBody tripId={tripId}/>
-        </View>
-    )
-}
 
 interface PeopleTableTypes {
     id: number,
@@ -65,12 +45,14 @@ interface TotalTypes {
     amount: number,
     rate: number,
 }
-function MainBody({tripId}: {tripId: number}) {
+export default function Overview({tripId, isActive, isClose, animationTime}: {tripId: number, isActive: boolean, isClose: boolean, animationTime: number}) {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const tripName: string = "trip_" + tripId.toString();
     const transactionName: string = "transaction_" + tripId.toString();
     const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const translate = useSharedValue(windowHeight);
     
     const [people, setPeople] = useState<PeopleTableTypes[]>([]);
     const [currencies, setCurrencies] = useState<CurrencyTableTypes[]>([]);
@@ -114,14 +96,29 @@ function MainBody({tripId}: {tripId: number}) {
     }, [db])
 
     useEffect(() => {
+        if (isActive) {
+            refetchItems();
+        }
         const unsubscribe = navigation.addListener('focus', async () => {
             await refetchItems();
         });
 
         // console.log('currencies changed:', currencies);
         return unsubscribe;
-    }, [navigation]);
-  
+    }, [navigation, isActive]);
+
+    useEffect(() => {
+        if (!isClose) {
+            translate.value = withTiming(0, {duration: animationTime});
+        } else {
+            translate.value = withTiming(windowHeight, {duration: animationTime});
+        }
+    }, [isClose])
+
+    const expandStyle = useAnimatedStyle(() => ({
+        transform: [{translateY: translate.value}]
+    }))
+
     useEffect(() => {
         if (people.length > 0 && currencies.length > 0) {
             calculateValues({people, currencies, expenses, transactions, rates, setTotalSpent, setTotalExpense, setTotalBalance});
@@ -130,7 +127,7 @@ function MainBody({tripId}: {tripId: number}) {
 
 
     return (
-        <View style={genericMainBodyStyles.outerContainer}>
+        <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
         <ScrollView style={{width: windowWidth}}>
         <View style={{alignItems: 'center'}}>
             {(!isLoading) && 
@@ -153,7 +150,7 @@ function MainBody({tripId}: {tripId: number}) {
             }
         </View>
         </ScrollView>
-        </View>
+        </Animated.View>
     )
 }
 
