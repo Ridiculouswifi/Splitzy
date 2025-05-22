@@ -50,7 +50,9 @@ export default function Overview({tripId, isActive, isClose, animationTime}: {tr
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const tripName: string = "trip_" + tripId.toString();
     const transactionName: string = "transaction_" + tripId.toString();
+
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isDisplay, setIsDisplay] = useState<boolean>(false);
 
     const translate = useSharedValue(windowHeight);
     
@@ -120,17 +122,19 @@ export default function Overview({tripId, isActive, isClose, animationTime}: {tr
     }))
 
     useEffect(() => {
-        if (people.length > 0 && currencies.length > 0) {
+        if (!isLoading && people.length > 0 && currencies.length > 0 && expenses.length >= 0 && transactions.length >= 0) {
             calculateValues({people, currencies, expenses, transactions, rates, setTotalSpent, setTotalExpense, setTotalBalance});
+            setIsDisplay(true);
+            console.log(expenses.length)
         }
-    }, [expenses, people, currencies, transactions])
+    }, [isLoading, expenses, people, currencies, transactions])
 
 
     return (
         <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
         <ScrollView style={{width: windowWidth}} showsVerticalScrollIndicator={false}>
         <View style={{alignItems: 'center'}}>
-            {(!isLoading) && 
+            {(isDisplay) && 
             <View style={genericMainBodyStyles.container}>
                 <VerticalGap height={10}/>
                 <Statistics people={people} compilation={totalSpent} title="Total Paid"/>
