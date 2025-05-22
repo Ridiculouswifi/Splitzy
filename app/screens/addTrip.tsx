@@ -46,6 +46,7 @@ interface StoreValidity {
     currencies: {name: boolean, abbreviation: boolean}[],
 }
 function MainBody() {
+    const insets = useSafeAreaInsets();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const db = useSQLiteContext();
 
@@ -197,7 +198,7 @@ function MainBody() {
     }
 
     return (
-        <KeyboardAvoidingView style={[genericMainBodyStyles.outerContainer, {display: 'flex'}]}
+        <KeyboardAvoidingView style={[genericMainBodyStyles.outerContainer, {display: 'flex', height: windowHeight - (0.09 * windowHeight) - insets.top}]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView style={{width: windowWidth}} contentContainerStyle={{alignItems: 'center'}}>
         <View style={genericMainBodyStyles.container}>

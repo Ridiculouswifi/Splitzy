@@ -128,7 +128,7 @@ export default function Overview({tripId, isActive, isClose, animationTime}: {tr
 
     return (
         <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
-        <ScrollView style={{width: windowWidth}}>
+        <ScrollView style={{width: windowWidth}} showsVerticalScrollIndicator={false}>
         <View style={{alignItems: 'center'}}>
             {(!isLoading) && 
             <View style={genericMainBodyStyles.container}>

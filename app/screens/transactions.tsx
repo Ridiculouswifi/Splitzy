@@ -143,7 +143,7 @@ function DisplayTransactions({tripId, isActive}: {tripId: number, isActive: bool
     }
     
     return (
-        <ScrollView style={displayTransactionsStyles.container}>
+        <ScrollView style={displayTransactionsStyles.container} showsVerticalScrollIndicator={false}>
             <View style={displayTransactionsStyles.internalContainer}>
                 {transactions.map((transaction) => (
                     <Transaction key={transaction.id} item={transaction} deleteTransaction={deleteItem} tripId={tripId}/>

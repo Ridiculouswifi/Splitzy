@@ -459,7 +459,7 @@ function DisplayExpenses(props: DisplayExpensesProps) {
         props.currencies, props.compareCurrencies])
     
     return (
-        <ScrollView style={displayExpensesStyles.container}>
+        <ScrollView style={displayExpensesStyles.container} showsVerticalScrollIndicator={false}>
             <View style={displayExpensesStyles.internalContainer}>
                 {!isLoadingExpenses && expenses.map((expense, index) => {
                     return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={props.tripId} people={props.people} toShow={toShow[index]}/>;

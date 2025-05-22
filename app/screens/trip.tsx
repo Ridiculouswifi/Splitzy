@@ -45,7 +45,7 @@ export default function Trip() {
             <StatusBar barStyle={'light-content'}/>
             <TopSection title={tripName}/>
 
-            <View style={{flex: 1, position: 'relative'}}>
+            <View style={{position: 'relative', height: windowHeight - (0.09 * windowHeight) - insets.top - 95}}>
                 <Overview tripId={tripId} isActive={active == 1} isClose={isCloseList[0]} animationTime={animationTime}/>
                 <Transactions tripId={tripId} isActive={active == 2} isClose={isCloseList[1]} animationTime={animationTime}/>
                 <Expenses tripId={tripId} isActive={active == 3} isClose={isCloseList[2]} animationTime={animationTime}/>

@@ -74,6 +74,6 @@ export const genericMainBodyStyles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2, // for Android shadow
         alignItems: 'center',
-        height: '100%'
+        height: '100%',
     },
 })
