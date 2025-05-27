@@ -1,13 +1,14 @@
+import { ToggleButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
 import { Divider, VerticalGap } from "@/components/gap";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { genericMainBodyStyles } from "@/components/screenTitle";
 import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Overview">;
@@ -16,26 +17,6 @@ type RouteTypes = RouteProp<ParamsList, "Overview">;
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 const windowFontScale = Dimensions.get('window').fontScale;
-
-export default function Overview() {
-    const route = useRoute<RouteTypes>();
-    const { tripId } = route.params;
-    const insets = useSafeAreaInsets();
-    const tripStyles = StyleSheet.create({
-        container: {
-            paddingTop: insets.top,
-            backgroundColor: Colours.title,
-            flex: 1,
-        }
-    })
-    return (
-        <View style={tripStyles.container}>
-            <StatusBar barStyle={'light-content'}/>
-            <TopSection title="Trip"/>
-            <MainBody tripId={tripId}/>
-        </View>
-    )
-}
 
 interface PeopleTableTypes {
     id: number,
@@ -62,18 +43,25 @@ interface TotalTypes {
     currencyId: number,
     abbreviation: string,
     amount: number,
+    rate: number,
 }
-function MainBody({tripId}: {tripId: number}) {
+export default function Overview({tripId, isActive, isClose, animationTime}: {tripId: number, isActive: boolean, isClose: boolean, animationTime: number}) {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const tripName: string = "trip_" + tripId.toString();
     const transactionName: string = "transaction_" + tripId.toString();
+
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isDisplay, setIsDisplay] = useState<boolean>(false);
+
+    const translate = useSharedValue(windowHeight);
     
     const [people, setPeople] = useState<PeopleTableTypes[]>([]);
     const [currencies, setCurrencies] = useState<CurrencyTableTypes[]>([]);
     const [expenses, setExpenses] = useState<[]>([]);
     const [transactions, setTransactions] = useState<TransactionsTableTypes[]>([]);
+
+    const rates: number[] = [1, 1.2];
 
     const [totalSpent, setTotalSpent] = useState<TotalTypes[]>([]);
     const [totalExpense, setTotalExpense] = useState<TotalTypes[]>([]);
@@ -110,26 +98,43 @@ function MainBody({tripId}: {tripId: number}) {
     }, [db])
 
     useEffect(() => {
+        if (isActive) {
+            refetchItems();
+        }
         const unsubscribe = navigation.addListener('focus', async () => {
             await refetchItems();
         });
 
         // console.log('currencies changed:', currencies);
         return unsubscribe;
-    }, [navigation]);
-  
+    }, [navigation, isActive]);
+
     useEffect(() => {
-        if (people.length > 0 && currencies.length > 0) {
-            calculateValues({people, currencies, expenses, transactions, setTotalSpent, setTotalExpense, setTotalBalance});
+        if (!isClose) {
+            translate.value = withTiming(0, {duration: animationTime});
+        } else {
+            translate.value = withTiming(windowHeight, {duration: animationTime});
         }
-    }, [expenses, people, currencies, transactions])
+    }, [isClose])
+
+    const expandStyle = useAnimatedStyle(() => ({
+        transform: [{translateY: translate.value}]
+    }))
+
+    useEffect(() => {
+        if (!isLoading && people.length > 0 && currencies.length > 0 && expenses.length >= 0 && transactions.length >= 0) {
+            calculateValues({people, currencies, expenses, transactions, rates, setTotalSpent, setTotalExpense, setTotalBalance});
+            setIsDisplay(true);
+            console.log(expenses.length)
+        }
+    }, [isLoading, expenses, people, currencies, transactions])
 
 
     return (
-        <View style={genericMainBodyStyles.outerContainer}>
-        <ScrollView style={{width: windowWidth}}>
+        <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
+        <ScrollView style={{width: windowWidth}} showsVerticalScrollIndicator={false}>
         <View style={{alignItems: 'center'}}>
-            {(!isLoading) && 
+            {(isDisplay) && 
             <View style={genericMainBodyStyles.container}>
                 <VerticalGap height={10}/>
                 <Statistics people={people} compilation={totalSpent} title="Total Paid"/>
@@ -149,7 +154,7 @@ function MainBody({tripId}: {tripId: number}) {
             }
         </View>
         </ScrollView>
-        </View>
+        </Animated.View>
     )
 }
 
@@ -158,6 +163,7 @@ interface CalculateProps {
     currencies: CurrencyTableTypes[];
     expenses: [];
     transactions: TransactionsTableTypes[];
+    rates: number[];
     setTotalSpent: (variable: TotalTypes[]) => void,
     setTotalExpense: (variable: TotalTypes[]) => void,
     setTotalBalance: (variable: TotalTypes[]) => void,
@@ -174,9 +180,9 @@ function calculateValues(props: CalculateProps) {
 
     for (let i = 0; i < peopleCount; i++) {
         for (let j = 0; j < currencyCount; j++) {
-            totalSpent.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
-            totalExpense.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
-            totalBalance.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
+            totalSpent.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"], "rate": props.rates[j]});
+            totalExpense.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"], "rate": props.rates[j]});
+            totalBalance.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"], "rate": props.rates[j]});
         }
         columnNames.push("person_" + props.people[i]["id"].toString());
     }
@@ -238,6 +244,7 @@ interface PerPersonProps {
     personId: number,
     personName: string,
     compilation: TotalTypes[],
+    isCombine: boolean,
 }
 interface ExpenseProps {
     amount: number,
@@ -248,39 +255,66 @@ interface TitleProps {
 }
 
 interface SplitArrayProps {
-    setArray: (variable: TotalTypes[]) => void,
+    setSplit: (variable: TotalTypes[]) => void,
+    setCombine: (variable: TotalTypes[]) => void,
 }
 function splitArray(props: PerPersonProps & SplitArrayProps) {
-    let result: TotalTypes[] = [];
+    let splitResult: TotalTypes[] = [];
+    let combineResult: TotalTypes[] = [{"personId": props.personId, "currencyId": props.compilation[0]["currencyId"], "amount": 0, "abbreviation": props.compilation[0]["abbreviation"], "rate": props.compilation[0]["rate"]}];
     for (let i = 0; i < props.compilation.length; i++) {
         if (props.compilation[i]["personId"] == props.personId) {
-            result.push(props.compilation[i])
+            splitResult.push(props.compilation[i]);
+            combineResult[0]["amount"] += props.compilation[i].amount / props.compilation[i].rate;
         }
     }
-    props.setArray(result);
+    props.setSplit(splitResult);
+    props.setCombine(combineResult);
 }
 
 const statisticsStyles = StyleSheet.create({
     container: {
         width: 0.8 * windowWidth,
     },
+    titleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
     title: {
         fontSize: 23,
         fontWeight: 'bold',
         color: Colours.textColor,
     },
+    toggleContainer: {
+        alignItems: 'center',
+    },
+    toggleMessage: {
+        color: Colours.textColor,
+        fontSize: 15,
+        fontWeight: '500',
+    },
 })
 function Statistics(props: DetailsProps & TitleProps) {    
+     const [isCombine, setIsCombine] = useState<boolean>(false);
+
     return (
         <View style={[statisticsStyles.container]}>
-            <Text style={statisticsStyles.title}>{props.title}</Text>
+            <View style={statisticsStyles.titleContainer}>
+                <Text style={statisticsStyles.title}>{props.title}</Text>
+                <View style={statisticsStyles.toggleContainer}>
+                    <Text style={statisticsStyles.toggleMessage}>Combine</Text>
+                    <VerticalGap height={5}/>
+                    <ToggleButton buttonOn={isCombine} setButtonOn={setIsCombine}/>
+                </View>
+            </View>
             <VerticalGap height={10}/>
             {props.people.map((person) => (
                 <StatisticsIndiv 
                     key={person.id}
                     personId={person.id}
                     personName={person.name}
-                    compilation={props.compilation}/>
+                    compilation={props.compilation}
+                    isCombine={isCombine}/>
             ))}
         </View>
     )
@@ -309,9 +343,10 @@ const statisticsIndivStyles = StyleSheet.create({
 })
 function StatisticsIndiv(props: PerPersonProps) {
     const [contributions, setContributions] = useState<TotalTypes[]>([]);
+    const [combineContributions, setCombineContributions] = useState<TotalTypes[]>([]);
 
     useEffect(() => {
-        splitArray({...props, setArray: setContributions}) // ... is used to spread out the props
+        splitArray({...props, setSplit: setContributions, setCombine: setCombineContributions}) // ... is used to spread out the props
     }, [])
 
     return (
@@ -321,7 +356,11 @@ function StatisticsIndiv(props: PerPersonProps) {
                 <Text style={statisticsIndivStyles.name}>{props.personName}</Text>
             </View>
             <View style={statisticsIndivStyles.amountContainer}>
-                {contributions.map((contribution) => (
+                {props.isCombine ?
+                combineContributions.map((contribution) => (
+                    <Expense key={contribution.currencyId} amount={contribution.amount} abbreviation={contribution.abbreviation}/>
+                ))
+                : contributions.map((contribution) => (
                     <Expense key={contribution.currencyId} amount={contribution.amount} abbreviation={contribution.abbreviation}/>
                 ))}
             </View>

@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Colours } from "./colours";
+import { setPopProgram } from "./globalFlag";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList>;
 
@@ -34,10 +35,13 @@ export function TopSection({title}: {title: string}) {
             color: Colours.textColor,
             shadowOpacity: 0.1,
             shadowColor: '#000',
+            width: 270,
+            textAlign: 'center',
         },
     })
     
     function returnHome() {
+        setPopProgram(true);
         navigation.pop();
     }
 
@@ -47,7 +51,7 @@ export function TopSection({title}: {title: string}) {
                 <TouchableOpacity onPress={returnHome}>
                     <Ionicons name="chevron-back-outline" size={35} color={Colours.genericIcon}/>
                 </TouchableOpacity>
-                <Text style={topSectionStyles.titleMessage}>{title}</Text>
+                <Text style={topSectionStyles.titleMessage} ellipsizeMode="tail" numberOfLines={1}>{title}</Text>
                 <View style={{width: 35}}></View>
             </View>
         </View>
@@ -63,7 +67,6 @@ export const genericMainBodyStyles = StyleSheet.create({
         paddingTop: 15,
     },
     outerContainer: {
-        flex: 1,
         backgroundColor: Colours.background,
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
@@ -73,5 +76,6 @@ export const genericMainBodyStyles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2, // for Android shadow
         alignItems: 'center',
+        height: '100%',
     },
 })

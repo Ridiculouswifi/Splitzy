@@ -64,6 +64,9 @@ function MainBody({tripId}: {tripId: number}) {
 
     const [confirmMessage, setConfirmMessage] = useState<boolean>(false);
     
+    // For Defensive Code
+    const [isValid, setIsValid] = useState<boolean>(true);
+    
     const [expenseName, setExpenseName] = useState<string>('');
     const [payerId, setPayerId] = useState<number>(0);
     const [amount, setAmount] = useState<string>('');
@@ -109,14 +112,23 @@ function MainBody({tripId}: {tripId: number}) {
         setIsLoading(true);
         //console.log(expenseName, payerId, amount, currencyId, date);
         //console.log(people);
-        await addExpense(db, tripId, expenseName, payerId, parseFloat(amount), currencyId, date, people);
+        await addExpense(db, tripId, expenseName, payerId, amount == '' ? 0 : parseFloat(amount), currencyId, date, people);
         setConfirmMessage(true);
         setTimeout(() => {setIsLoading(false)}, 1000);
     }
 
     function pressConfirm() {
-        if (!isLoading) {
+        let isValidCopy: boolean;
+        if (expenseName != "") {
+            isValidCopy = true;
+        } else {
+            isValidCopy = false;
+        }
+
+        if (isValidCopy && !isLoading) {
             confirmExpense();
+        } else {
+            setIsValid(isValidCopy);
         }
     }
 
@@ -139,7 +151,8 @@ function MainBody({tripId}: {tripId: number}) {
                 setCurrencyId={setCurrencyId}
                 currencyList={currencyList}
                 setPayerId={setPayerId}
-                peopleList={peopleList}/>
+                peopleList={peopleList}
+                isValid={isValid}/>
 
             <VerticalGap height={20}/>
             <Divider/>
@@ -179,6 +192,7 @@ interface detailsProps {
     currencyList: CurrencyPickerProps[];
     setPayerId: (variable: number) => void;
     peopleList: CurrencyPickerProps[];
+    isValid: boolean;
 }
 const detailsStyle = StyleSheet.create({
     container: {
@@ -231,7 +245,17 @@ const detailsStyle = StyleSheet.create({
         padding: 5,
         color: Colours.textColor,
         fontSize: 20,
-    }
+    },
+    expenseNameContainer: {
+        height: 50,
+    },
+    requiredText: {
+        color: Colours.cancel,
+        fontSize: 14,
+        fontWeight: '500',
+        paddingLeft: 5,
+        paddingTop: 2,
+    },
 })
 function Details(props: detailsProps){
     const insets = useSafeAreaInsets();
@@ -268,9 +292,12 @@ function Details(props: detailsProps){
 
             <VerticalGap height={20}/>
 
-            <Input setVariable={props.setExpenseName} variablePlaceHolder="Expense Name" width={0.8 * windowWidth} keyboardType="default"/>
+            <View style={detailsStyle.expenseNameContainer}>
+                <Input setVariable={props.setExpenseName} variablePlaceHolder="Expense Name" width={0.8 * windowWidth} keyboardType="default" isValid={props.isValid}/>
+                {!props.isValid && <Text style={inputStyles.requiredText}>Required!</Text>}
+            </View>
 
-            <VerticalGap height={20}/>
+            <VerticalGap height={0}/>
 
             <View style={detailsStyle.miniContainer}>
                 <Text style={detailsStyle.payerTitle}>By</Text>
@@ -289,7 +316,7 @@ function Details(props: detailsProps){
             <VerticalGap height={20}/>
 
             <View style={detailsStyle.miniContainer}>
-                <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth} keyboardType="numeric"/>
+                <Input setVariable={props.setAmount} variablePlaceHolder="Amount" width={0.5 * windowWidth} keyboardType="numeric" isValid={true}/>
                 <Pressable style={[detailsStyle.pickerContainer]}
                         onPress={() => {setViewCurrencyPicker(true)}}>
                     <MyPicker isVisible={viewCurrencyPicker} 
@@ -322,21 +349,32 @@ interface inputProps {
     variablePlaceHolder: string;
     width: number;
     keyboardType: KeyboardTypeOptions;
+    isValid?: boolean
 }
 const inputStyles = StyleSheet.create({
+    container: {
+        height: 50,
+    },
     inputField: {
+        width: 0.8 * windowWidth,
         borderBottomWidth: 2,
-        borderColor: Colours.inputField,
         color: Colours.textColor,
         fontSize: 20,
+    },
+    requiredText: {
+        color: Colours.cancel,
+        fontSize: 14,
+        fontWeight: '500',
+        paddingLeft: 5,
+        paddingTop: 2,
     }
 })
-function Input({setVariable, variablePlaceHolder, width, keyboardType}: inputProps) {
+function Input({setVariable, variablePlaceHolder, width, keyboardType, isValid}: inputProps) {
     return (
         <TextInput 
             placeholder={variablePlaceHolder}
             placeholderTextColor={Colours.placeholder}
-            style={[inputStyles.inputField, {width: width}]}
+            style={[inputStyles.inputField, {width: width, borderColor: isValid ? Colours.inputField : Colours.cancel}]}
             onChangeText={setVariable}
             keyboardType={keyboardType}/>
     )

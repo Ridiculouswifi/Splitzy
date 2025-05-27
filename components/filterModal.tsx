@@ -2,17 +2,17 @@ import { ReactNode, useEffect, useState } from 'react';
 //import Modal from 'react-native-modal';
 import { Ionicons } from '@expo/vector-icons';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colours } from './colours';
 import { Divider, VerticalGap } from './gap';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
-const animationTime: number = 300;
+const animationTime: number = 200;
 
 interface filterModalProps {
-    isOpen: boolean,
+    isOpen?: boolean,
     closeFilter: () => void,
     child: ReactNode,
 }
@@ -22,6 +22,9 @@ const filterModalStyles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'flex-end',
+        position: 'absolute',
+        width: windowWidth,
+        height: windowHeight,
     },
     menu: {
         backgroundColor: Colours.background,
@@ -44,36 +47,41 @@ export function FilterModal({isOpen, closeFilter, child}: filterModalProps) {
     const insets = useSafeAreaInsets();
 
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+
     const moveX = useSharedValue(235);
     const transparency = useSharedValue(0);
     
     useEffect(() => {
         if (isOpen) {
-            setModalVisible(true)
-            moveX.value = withTiming(0, {duration: 500})
-            transparency.value = withTiming(0.6, {duration: 500});
+            setModalVisible(true);
         }
     }, [isOpen])
+
+    useEffect(() => {
+        if (modalVisible) {
+            moveX.value = withTiming(0, {duration: animationTime, easing: Easing.linear});
+            transparency.value = withTiming(0.6, {duration: animationTime});
+        }
+    }, [modalVisible])
 ;
     function handleClose() {
-        moveX.value = withTiming(235, {duration: animationTime})
-        transparency.value = withTiming(0, {duration: animationTime})
+        moveX.value = withTiming(235, {duration: animationTime, easing: Easing.linear});
+        transparency.value = withTiming(0, {duration: animationTime});
         setTimeout(() => setModalVisible(false), animationTime);
         closeFilter();
     }
 
     const backgroundStyle = useAnimatedStyle(() => ({
-        backgroundColor: `rgba(0, 0, 0, ${transparency.value})`
+        backgroundColor: `rgba(0, 0, 0, ${transparency.value})`,
     }));
 
     const menuStyle = useAnimatedStyle(() => ({
         transform: [{ translateX: moveX.value }],
     }))
-    
+
     return (
-        <Modal visible={modalVisible}
-                transparent={true}>
-            <Animated.View style={[filterModalStyles.background, backgroundStyle]}>
+        <Modal visible={modalVisible} transparent={true}>
+            <Animated.View style={[StyleSheet.absoluteFill, filterModalStyles.background, backgroundStyle]}>
                 <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}/>
                 <Animated.View style={[filterModalStyles.menu, menuStyle, {paddingTop: insets.top + 10}]}>
                     <Text style={filterModalStyles.filterTitle}>Filter</Text>

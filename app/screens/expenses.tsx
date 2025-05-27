@@ -3,54 +3,35 @@ import { Colours } from "@/components/colours";
 import { ConfirmDelete } from "@/components/confirmDelete";
 import { CheckBox, FilterModal } from "@/components/filterModal";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
-import { genericMainBodyStyles, TopSection } from "@/components/screenTitle";
+import { genericMainBodyStyles } from "@/components/screenTitle";
 import { SearchBar } from "@/components/searchBar";
 import { deleteExpense, getCurrency, getPerson, getRelatedCurrencies, getRelatedPeople, updateExpenseStatus } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Expenses">;
+type BottomTabNavigatorTypes = BottomTabNavigationProp<ParamsList, "Expenses">;
 type RouteTypes = RouteProp<ParamsList, "Expenses">;
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
-export default function Expenses() {
-    const route = useRoute<RouteTypes>();
-    const { tripId } = route.params;
-    
-    const insets = useSafeAreaInsets();
-
-    const tripStyles = StyleSheet.create({
-        container: {
-            paddingTop: insets.top,
-            backgroundColor: Colours.title,
-            flex: 1,
-        }
-    })
-    return (
-        <View style={tripStyles.container}>
-            <StatusBar barStyle={'light-content'}/>
-            <TopSection title="Trip"/>
-            <MainBody tripId={tripId}/>
-        </View>
-    )
-}
-
-function MainBody({tripId}: {tripId: number}) {
-    const navigation = useNavigation<NativeStackNavigatorTypes>();
+export default function Expenses({tripId, isActive, isClose, animationTime}: {tripId: number, isActive: boolean, isClose: boolean, animationTime: number}) {
+    const navigation = useNavigation<BottomTabNavigatorTypes>();
     const db = useSQLiteContext ();
 
     const [peopleList, setPeopleList] = useState<PeopleTableTypes[]>([]);
     const [currenciesList, setCurrenciesList] = useState<CurrencyTableTypes[]>([]);
+
+    const translate = useSharedValue(windowHeight);
 
     const defaultStart: Date = new Date();
     defaultStart.setHours(0, 0, 0, 0);
@@ -106,9 +87,23 @@ function MainBody({tripId}: {tripId: number}) {
         navigation.navigate("AddExpense", {tripId: tripId});
     }
 
+    useEffect(() => {
+        if (!isClose) {
+            translate.value = withTiming(0, {duration: animationTime});
+        } else {
+            translate.value = withTiming(windowHeight, {duration: animationTime});
+        }
+    }, [isClose])
+
+    const expandStyle = useAnimatedStyle(() => ({
+        transform: [{translateY: translate.value}]
+    }))
+
     return (
-        <KeyboardAvoidingView style={genericMainBodyStyles.outerContainer}
+        <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
+        <KeyboardAvoidingView style={{flex: 1}}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
             <View style={mainBodyStyles.expenseContainer}>
                 <GenericButton
                     text="New Expense" 
@@ -119,30 +114,32 @@ function MainBody({tripId}: {tripId: number}) {
                     fontsize={25} 
                     action={goToAddExpense}/>
                 <VerticalGap height={10}/>
-                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => setFilterOpen(true)}/>
-                <FilterModal isOpen={filterOpen} closeFilter={() => setFilterOpen(false)} 
-                child={
-                    <Filter tripId={tripId} peopleList={peopleList} currenciesList={currenciesList}
-                        compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
-                        compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
-                        comparePayer={comparePayer} setComparePayer={setComparePayer}
-                        compareCurrency={compareCurrency} setCompareCurrency={setCompareCurrency}
-                        payerChecks={payerChecks} setPayerChecks={setPayerChecks}
-                        currencyChecks={currencyChecks} setCurrencyChecks={setCurrencyChecks}
-                        startTime={startTime} setStartTime={setStartTime}
-                        endTime={endTime} setEndTime={setEndTime}
-                        setPayers={setPayers}
-                        setCurrencies={setCurrencies}
-                    />
-                }/>
+                <SearchBar keyPhrase={keyPhrase} setKeyPhrase={setKeyPhrase} openFilter={() => {setFilterOpen(true)}}/>
             </View>
-            <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase} people={peopleList}
+            <DisplayExpenses tripId={tripId} keyPhrase={keyPhrase} people={peopleList} isActive={isActive}
                 startTime={startTime.getTime()} compareStartTime={compareStartTime}
                 endTime={endTime.getTime()} compareEndTime={compareEndTime}
                 payers={payers} comparePayers={comparePayer}
                 currencies={currencies} compareCurrencies={compareCurrency}
             />
+            <FilterModal isOpen={filterOpen} closeFilter={() => {setFilterOpen(false)}} 
+            child={
+                <Filter tripId={tripId} peopleList={peopleList} currenciesList={currenciesList}
+                    compareStartTime={compareStartTime} setCompareStartTime={setCompareStartTime}
+                    compareEndTime={compareEndTime} setCompareEndTime={setCompareEndTime}
+                    comparePayer={comparePayer} setComparePayer={setComparePayer}
+                    compareCurrency={compareCurrency} setCompareCurrency={setCompareCurrency}
+                    payerChecks={payerChecks} setPayerChecks={setPayerChecks}
+                    currencyChecks={currencyChecks} setCurrencyChecks={setCurrencyChecks}
+                    startTime={startTime} setStartTime={setStartTime}
+                    endTime={endTime} setEndTime={setEndTime}
+                    setPayers={setPayers}
+                    setCurrencies={setCurrencies}
+                />
+            }/>
+            </Animated.View>
         </KeyboardAvoidingView>
+        </Animated.View>
     )
 }
 
@@ -374,6 +371,8 @@ interface DisplayExpensesProps {
     keyPhrase: string
     people: PeopleTableTypes[]
 
+    isActive: boolean
+
     startTime: number
     compareStartTime: boolean
     endTime: number
@@ -386,7 +385,10 @@ interface DisplayExpensesProps {
 function DisplayExpenses(props: DisplayExpensesProps) {
     const db = useSQLiteContext ();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
-    const [expenses, setExpenses] = useState<ExpenseEntity[]>([]);
+    const [expenses, setExpenses] = useState<ExpenseEntity[]>([{id: 0, name: "", payer_id: 0, expense: 0, currency_id: 0, date: new Date(), is_resolved: ""}]);
+
+    const [isLoadingExpenses, setIsLoadingExpenses] = useState<boolean>(true);
+    const [toShow, setToShow] = useState<boolean[]>([]);
 
     const tableName: string = "trip_" + props.tripId.toString();
 
@@ -417,30 +419,50 @@ function DisplayExpenses(props: DisplayExpensesProps) {
     }, [db])
 
     useEffect(() => {
+        if (props.isActive) {
+            refetchItems();
+        }
         const unsubscribe = navigation.addListener('focus', () => {
             refetchItems();
         });
         return unsubscribe;
     }, [navigation]);
 
+    // Check expenses are pulled before rendering the expense module
+    useEffect(() => {
+        if (expenses.length == 0 || expenses[0].id != 0) {
+            setIsLoadingExpenses(false);
+            setToShow(Array(expenses.length).fill(true));
+        }
+    }, [expenses])
+
     async function deleteItem(id: number, tripId: number) {
         console.log("Deleting:", id);
         await deleteExpense(db, id, tripId);
         await refetchItems();
     }
-    
-    return (
-        <ScrollView style={displayExpensesStyles.container}>
-            <View style={displayExpensesStyles.internalContainer}>
-                {expenses.map((expense) => {
-                    if (filter(expense, props.keyPhrase, 
+
+    useEffect(() => {
+        let toShowCopy: boolean[] = [...toShow];
+        for (let i = 0; i < expenses.length; i++) {
+            toShowCopy[i] = filter(expenses[i], props.keyPhrase, 
                             props.startTime, props.compareStartTime, 
                             props.endTime, props.compareEndTime, 
                             props.payers, props.comparePayers, 
-                            props.currencies, props.compareCurrencies)) {
-                        return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={props.tripId} people={props.people}/>;
-                    }
-                    return null;
+                            props.currencies, props.compareCurrencies)
+        }
+        setToShow(toShowCopy);
+    }, [props.keyPhrase, 
+        props.startTime, props.compareStartTime, 
+        props.endTime, props.compareEndTime, 
+        props.payers, props.comparePayers, 
+        props.currencies, props.compareCurrencies])
+    
+    return (
+        <ScrollView style={displayExpensesStyles.container} showsVerticalScrollIndicator={false}>
+            <View style={displayExpensesStyles.internalContainer}>
+                {!isLoadingExpenses && expenses.map((expense, index) => {
+                    return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={props.tripId} people={props.people} toShow={toShow[index]}/>;
                 }
                 )}
                 <VerticalGap height={10}/>
@@ -464,6 +486,7 @@ interface CurrencyTableTypes {
 const expenseStyles = StyleSheet.create({
     container: {
         width: 0.95 * windowWidth,
+        height: '100%',
         borderRadius: 10,
         paddingHorizontal: 20, 
         paddingVertical: 10,
@@ -476,23 +499,23 @@ const expenseStyles = StyleSheet.create({
         backgroundColor: Colours.backgroundV2,
     },
     upper: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+
     },
     textContainer: {
-        width: 0.45 * windowWidth,
-    },
-    rightContainer: {
-        alignItems: 'flex-end',
+        minWidth: 80,
+        flex: 1,
     },
     expenseName: {
         fontSize: 25,
         fontWeight: '600',
         color: Colours.textColor,
+        width: 0.45 * windowWidth,
+        flex: 1,
     },
     payer: {
         fontSize: 17,
         color: Colours.textColor,
+        width: '100%',
     },
     date: {
         fontSize: 15,
@@ -510,16 +533,16 @@ const expenseStyles = StyleSheet.create({
     },
     buttonsContainer: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
     },
     showMoreContainer: {
-        height: 20,
+        height: 30,
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'center',
         position: 'absolute',
         alignSelf: 'center',
-        top: 90,
+        width: '100%',
+        backgroundColor: Colours.backgroundV2,
     },
     showMoreText: {
         color: Colours.placeholder,
@@ -528,8 +551,11 @@ const expenseStyles = StyleSheet.create({
         fontWeight: '600',
     },
 })
-function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, deleteExpense: (id: number, tripId: number) => void | Promise<void>, tripId: number, people: PeopleTableTypes[]}) {
+function Expense({item, deleteExpense, tripId, people, toShow}: 
+        {item: ExpenseEntity, deleteExpense: (id: number, tripId: number) => void | Promise<void>, tripId: number, people: PeopleTableTypes[], toShow: boolean}) {
     const db = useSQLiteContext ();
+
+    const [isLoadingText, setIsLoadingText] = useState<boolean>(false);
 
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -539,14 +565,17 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     const [isResolved, setIsResolved] = useState<string>('0');
 
     // Parameters for collapsible animation
-    const startHeight: number = 90;
+    const startHeight: number = 0;
+    const fillerHeight: number = 10;
+    const defaultHeight: number = 130;
     const startTop: number = 100;
     const [extension, setExtension] = useState<number>(0);
     useEffect(() => {
         setExtension(10 +           // Height of the gap between main upper content and collpasible content
             (people.length * 35));  // Height of each member type
     }, [people])
-    const height = useSharedValue(startHeight);
+    const container = useSharedValue(startHeight);
+    const filler = useSharedValue(startHeight);
     const top = useSharedValue(startTop);
     const duration: number = 300;
 
@@ -567,12 +596,36 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
         getText();
     }, [])
 
+    useEffect(() => {
+        if (payer.length > 0 && abbreviation.length > 0) {
+            setIsLoadingText(false);
+        }
+    }, [payer, abbreviation])
+
+    useEffect(() => {
+        if(!isLoadingText && toShow) {
+            container.value = withTiming(defaultHeight, {duration: duration})
+            filler.value = withTiming(fillerHeight, {duration: duration})
+        }
+    }, [isLoadingText, toShow])
+
+    useEffect(() => {
+        if(!toShow) {
+            container.value = withTiming(startHeight, {duration: duration})
+            filler.value = withTiming(startHeight, {duration: duration})
+        }
+    }, [toShow])
+
     function pressDelete() {
         setIsVisible(true);
     }
 
     function confirmDelete() {
-        deleteExpense && deleteExpense(item.id, tripId);
+        container.value = withTiming(startHeight, {duration: duration})
+        filler.value = withTiming(startHeight, {duration: duration})
+        setTimeout(() => {
+            deleteExpense && deleteExpense(item.id, tripId);
+        }, duration);
         setIsVisible(false);
     }
 
@@ -583,12 +636,14 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
 
     function expand() {
         if (!isExpanded) {
-            height.value = withTiming(startHeight + extension, {duration: duration});
+            container.value = withTiming(defaultHeight + extension, {duration: duration});
+            filler.value = -1;
             degree.value = withTiming('180deg', {duration: duration});
             top.value = withTiming(startTop + extension, {duration: duration});
             setIsExpanded(true);
         } else {
-            height.value = withTiming(startHeight, {duration: duration});
+            container.value = withTiming(defaultHeight, {duration: duration});
+            setTimeout(() => {filler.value = fillerHeight}, duration)
             degree.value = withTiming('0deg', {duration: duration});
             top.value = withTiming(startTop, {duration: duration});
             setTimeout(() => setIsExpanded(false), duration);
@@ -596,8 +651,12 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
         setExpandMessage(!expandMessage);
     }
 
-    const expandStyle = useAnimatedStyle(() => ({
-        height: height.value
+    const containerStyle = useAnimatedStyle(() => ({
+        height: container.value
+    }))
+
+    const fillerStyle = useAnimatedStyle(() => ({
+        height: filler.value
     }))
 
     const rotationStyle = useAnimatedStyle(() => ({
@@ -610,19 +669,15 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
     
     return (
         <View>
-            <VerticalGap key={item.id} height={10}/>
+            {!isLoadingText && <View>
+            <Animated.View style={[fillerStyle, {overflow: 'hidden'}]}>
+                <VerticalGap key={item.id} height={10}/>
+            </Animated.View>
+            <Animated.View style={[containerStyle, {overflow: 'hidden'}]}>
             <TouchableOpacity style={[expenseStyles.container]} activeOpacity={0.65} onPress={expand}>
-                <Animated.View style={[expandStyle, {overflow: 'hidden'}]}>
-                <View style={[expenseStyles.upper]}>
-                    <View style={expenseStyles.textContainer}>
+                <View style={[expenseStyles.upper, {height: 90}]}>
+                    <View style={{flexDirection: 'row', width: '100%'}}>
                         <Text style={expenseStyles.expenseName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
-                        <VerticalGap height={5}/>
-                        <Text style={expenseStyles.payer}>By: {payer}</Text>
-                        <VerticalGap height={10}/>
-                        <Text style={expenseStyles.date}>{item.date?.toLocaleDateString()}</Text>
-                        <VerticalGap height={5}/>
-                    </View>
-                    <View style={expenseStyles.rightContainer}>
                         <View style={expenseStyles.buttonsContainer}>
                             <GenericButton
                                 text="Resolved" 
@@ -637,25 +692,37 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
                                 <Ionicons name="trash-outline" size={28} color={Colours.cancel}/>
                             </TouchableOpacity>
                         </View>
-                        <VerticalGap height={15}/>
+                    </View>
+
+                    <VerticalGap height={5}/>
+
+                    <View style={{width: '100%', height: 55, flexDirection: 'row', justifyContent: 'space-between'}}>
+                        <View style={expenseStyles.textContainer}>
+                            <Text style={expenseStyles.payer} numberOfLines={1} ellipsizeMode="tail">By: {payer}</Text>
+                            <VerticalGap height={10}/>
+                            <Text style={expenseStyles.date}>{item.date?.toLocaleDateString()}</Text>
+                            <VerticalGap height={5}/>
+                        </View>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
                             <Text style={expenseStyles.amount}>{item.expense.toFixed(2)}</Text>
                             <Text style={expenseStyles.abbreviation}> {abbreviation}</Text>
                         </View>
-                        <VerticalGap height={1}/>
                     </View>
+                    
                 </View>
-                    {isExpanded && (
-                        <View>
-                            <VerticalGap height={5}/>
-                            {people.map((person) => (
-                                <Member key={person.id} name={person.name} weight={item["person_" + person.id.toString()]}/>
-                            ))}
-                            <VerticalGap height={5}/>
-                        </View>
-                    )}
-                </Animated.View>
+
+                {isExpanded && (
+                    <View>
+                        <VerticalGap height={5}/>
+                        {people.map((person) => (
+                            <Member key={person.id} name={person.name} weight={item["person_" + person.id.toString()]}/>
+                        ))}
+                        <VerticalGap height={5}/>
+                    </View>
+                )}
+
                 <VerticalGap height={5}/>
+                
                 <Animated.View style={[expenseStyles.showMoreContainer, topStyle]}>
                     <Text style={expenseStyles.showMoreText}>{expandMessage ? 'Show Less' : 'Show More'}</Text>
                     <Animated.View style={rotationStyle}>
@@ -664,6 +731,8 @@ function Expense({item, deleteExpense, tripId, people}: {item: ExpenseEntity, de
                 </Animated.View>
             </TouchableOpacity>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
+            </Animated.View>
+        </View>}
         </View>
     )
 }
