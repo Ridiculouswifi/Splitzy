@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Colours } from "./colours";
+import { setPopProgram } from "./globalFlag";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList>;
 
@@ -40,6 +41,7 @@ export function TopSection({title}: {title: string}) {
     })
     
     function returnHome() {
+        setPopProgram(true);
         navigation.pop();
     }
 

@@ -4,25 +4,38 @@ import { ConfirmDelete } from "@/components/confirmDelete";
 import { getDateKey } from "@/components/convertDate";
 import { CheckBox, FilterModal } from "@/components/filterModal";
 import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
+import { getPopProgram, setPopProgram } from "@/components/globalFlag";
 import { SearchBar } from "@/components/searchBar";
 import { deleteRelatedCurrencies, deleteRelatedPeople, deleteTrip } from "@/database/databaseSqlite";
 import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Home">;
+type RouteTypes = RouteProp<ParamsList, "Home">;
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 const windowFontScale = Dimensions.get('window').fontScale;
 
+const animationTime: number = 300;
+
+interface OverlayProps {
+    openTrip: boolean;
+    setOpenTrip: (variable: boolean) => void;
+    setPositionX: (variable: number) => void;
+    setPositionY: (variable: number) => void;
+}
+
 export default function Home() {
+    const navigation = useNavigation<NativeStackNavigatorTypes>();
     const insets = useSafeAreaInsets();
     const homeStyles = StyleSheet.create({
         container: {
@@ -31,11 +44,68 @@ export default function Home() {
             flex: 1,
         }
     })
+
+    const [openTrip, setOpenTrip] = useState<boolean>(false);
+    const [positionX, setPositionX] = useState<number>(0);
+    const [positionY, setPositionY] = useState<number>(0);
+
+    const posX = useSharedValue(0);
+    const posY = useSharedValue(0);
+    const width = useSharedValue(0.95 * windowWidth);
+    const height = useSharedValue(120);
+    const opacity = useSharedValue(0);
+
+    useEffect(() => {
+        posX.value = positionX;
+    }, [positionX])
+    useEffect(() => {
+        posY.value = positionY;
+    }, [positionY])
+
+    useEffect(() => {
+        if (openTrip) {
+            posX.value = withTiming(0, {duration: animationTime});
+            posY.value = withTiming(0, {duration: animationTime});
+            opacity.value = 1
+            width.value = withTiming(windowWidth, {duration: animationTime});
+            height.value = withTiming(windowHeight, {duration: animationTime});
+        } else {
+            posX.value = withTiming(positionX, {duration: animationTime});
+            posY.value = withTiming(positionY, {duration: animationTime});
+            setTimeout(() => opacity.value = 0, animationTime);
+            width.value = withTiming(0.95 * windowWidth, {duration: animationTime});
+            height.value = withTiming(120, {duration: animationTime});
+        }
+    }, [openTrip])
+
+    const overlayStyle = useAnimatedStyle(() => ({
+        top: posY.value, 
+        left: posX.value, 
+        width: width.value, 
+        height: height.value,
+        opacity: opacity.value
+    }))
+
+    useEffect(() => {
+        const subscribe = navigation.addListener('focus', () => {
+            if (getPopProgram()) {
+                setPopProgram(false);
+                setTimeout(() => setOpenTrip(false), animationTime);
+                console.log("Press Back");
+            } else {
+                setOpenTrip(false);
+                console.log("Swipe Back");
+            }
+        })
+        return subscribe;
+    }, [navigation])
+
     return (
         <View style={homeStyles.container}>
             <StatusBar barStyle={'light-content'}/>
             <TopSection/>
-            <MainBody/>
+            <MainBody openTrip={openTrip} setOpenTrip={setOpenTrip} setPositionX={setPositionX} setPositionY={setPositionY}/>
+            <Animated.View style={[overlayStyle, tripStyles.container, {position: 'absolute', zIndex: 0,}]}></Animated.View>
         </View>
     )
 }
@@ -63,7 +133,7 @@ function TopSection() {
     )
 }
 
-function MainBody() {
+function MainBody(overlayProps: OverlayProps) {
     const navigation = useNavigation<NativeStackNavigatorTypes>();
 
     // Variables for Filter
@@ -137,6 +207,7 @@ function MainBody() {
             <DisplayTrips keyPhrase={keyPhrase}
                 startTime={startTime.getTime()} compareStartTime={compareStartTime}
                 endTime={endTime.getTime()} compareEndTime={compareEndTime}
+                overlayProps={overlayProps}
             />
             <FilterModal isOpen={filterOpen} closeFilter={() => {setFilterOpen(false)}}
             child={
@@ -237,12 +308,13 @@ const tripStyles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowColor: '#000',
         borderWidth: 0.1,
-        backgroundColor: '#3C3E4B',
+        backgroundColor: Colours.backgroundV2,
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
     textContainer: {
-        width: 0.64 * windowWidth
+        width: 0.64 * windowWidth,
+        zIndex: 20,
     },
     tripName: {
         fontSize: 25,
@@ -258,12 +330,14 @@ const tripStyles = StyleSheet.create({
         color: Colours.textColor,
     }
 })
-function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>}) {
+function Trip({item, deleteItem, overlayProps} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>, overlayProps: OverlayProps}) {
     const db = useSQLiteContext();
     const { id, trip_name, location, start_date, end_date } = item;
     const [isVisible, setIsVisible] = useState(false);
 
     const navigation = useNavigation<NativeStackNavigatorTypes>();
+
+    const boxRef = useRef<View>(null);
 
     function editTrip() {
 
@@ -282,12 +356,23 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
         navigation.navigate('Trip', { tripId: id, tripName: trip_name });
     }
 
+    function clickTrip() {
+        if (boxRef.current) {
+            boxRef.current.measure((x, y, width, height, pageX, pageY) => {
+                overlayProps.setPositionX(pageX);
+                overlayProps.setPositionY(pageY);
+                overlayProps.setOpenTrip(!overlayProps.openTrip);
+                setTimeout(goToTrip, animationTime)
+            })
+        }
+    }
+
     return (
         <View>
             <VerticalGap key={item.id} height={10}/>
-            <TouchableOpacity style={tripStyles.container} activeOpacity={0.4}
-                onPress={goToTrip}>
-                <View style={tripStyles.textContainer}>
+            <TouchableOpacity style={[tripStyles.container]} activeOpacity={0.4}
+                onPress={clickTrip} ref={boxRef}>
+                <View style={[tripStyles.textContainer, {position: 'absolute', left: 20, top: 10}]}>
                     <Text style={tripStyles.tripName} numberOfLines={1} ellipsizeMode="tail">{trip_name}</Text>
                     <VerticalGap height={5}/>
                     <Text style={tripStyles.location} numberOfLines={1} ellipsizeMode="tail">{location}</Text>
@@ -296,7 +381,7 @@ function Trip({item, deleteItem} : {item: ItemEntity, deleteItem: (id: number) =
                     <VerticalGap height={15}/>
                 </View>
                 <View>
-                    <View style={{flexDirection: 'row'}}>
+                    <View style={{flexDirection: 'row', position: 'absolute', justifyContent: 'flex-end', width: 0.95 * windowWidth - 40, zIndex: 20,}}>
                         <TouchableOpacity>
                             <GenericButton
                                 text="Edit" 
@@ -341,8 +426,8 @@ const displayTripsStyles = StyleSheet.create({
         alignItems: 'center'
     }
 })
-function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareEndTime}: 
-    {keyPhrase: string, startTime: number, compareStartTime: boolean, endTime: number, compareEndTime: boolean}) {
+function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareEndTime, overlayProps}: 
+    {keyPhrase: string, startTime: number, compareStartTime: boolean, endTime: number, compareEndTime: boolean, overlayProps: OverlayProps}) {
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [trips, setTrips] = useState<ItemEntity[]>([]);
@@ -403,7 +488,7 @@ function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareE
                 if (filter(item, keyPhrase, 
                         startTime, compareStartTime, 
                         endTime, compareEndTime,)) {
-                    return <Trip key={item.id} item={item} deleteItem={deleteItem}/>;
+                    return <Trip key={item.id} item={item} deleteItem={deleteItem} overlayProps={overlayProps}/>;
                 }
                 return null;
             })}

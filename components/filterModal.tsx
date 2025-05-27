@@ -9,7 +9,7 @@ import { Divider, VerticalGap } from './gap';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
-const animationTime: number = 300;
+const animationTime: number = 200;
 
 interface filterModalProps {
     isOpen?: boolean,

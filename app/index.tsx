@@ -27,7 +27,7 @@ export type ParamsList = {
     TabNavigator: { tripId: number, tripName: string };
     Trip: { tripId: number, tripName: string };
     
-    Home: undefined;
+    Home: { poppedProgrammatically: boolean };
     Details: { tripId: number, tripName: string };
     AddTrip: undefined;
     Expenses: { tripId: number, tripName: string };
@@ -47,7 +47,7 @@ export default function Index() {
             <SQLiteProvider databaseName="splitzy.db" onInit={DB.createTables}>
                 <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
                     <Stack.Screen name="Home" component={Home}/>
-                    <Stack.Screen name="Trip" component={Trip}/>
+                    <Stack.Screen name="Trip" component={Trip} options={{animation: 'fade'}}/>
                     <Stack.Screen name="AddTrip" component={AddTrip}/>
                     <Stack.Screen name="AddExpense" component={AddExpense}/>
                     <Stack.Screen name="AddTransaction" component={AddTransaction}/>

@@ -1,8 +1,9 @@
 import { Colours } from "@/components/colours";
 import { VerticalGap } from "@/components/gap";
+import { setPopProgram } from "@/components/globalFlag";
 import { TopSection } from "@/components/screenTitle";
 import { Ionicons } from "@expo/vector-icons";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
 import { Dimensions, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
@@ -21,6 +22,7 @@ const windowWidth = Dimensions.get('window').width;
 const animationTime: number = 200;
 
 export default function Trip() {
+    const navigation = useNavigation<NativeStackNavigatorTypes>();
     const route = useRoute<RouteTypes>();
     const { tripId, tripName } = route.params;
     
@@ -32,6 +34,13 @@ export default function Trip() {
     useEffect(() => {
         changeActive(active, setIsCloseList);
     }, [active])
+
+    useEffect(() => {
+        const subscribe = navigation.addListener('focus', () => {
+            setPopProgram(false);
+        })
+        return subscribe;
+    }, [navigation])
 
     const tripStyles = StyleSheet.create({
         container: {
