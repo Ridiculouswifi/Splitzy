@@ -13,7 +13,7 @@ import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
@@ -187,6 +187,8 @@ function MainBody(overlayProps: OverlayProps) {
     }
 
     return (
+        <KeyboardAvoidingView style={{flex: 1, backgroundColor: Colours.background}}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={mainBodyStyles.container}>
             <View style={mainBodyStyles.tripContainer}>
                 <View style={mainBodyStyles.tripTop}>
@@ -219,6 +221,7 @@ function MainBody(overlayProps: OverlayProps) {
                 />    
             }/>
         </View>
+        </KeyboardAvoidingView>
     )
 }
 
@@ -369,7 +372,7 @@ function Trip({item, deleteItem, overlayProps} : {item: ItemEntity, deleteItem: 
 
     return (
         <View>
-            <VerticalGap key={item.id} height={10}/>
+            <VerticalGap key={item.id} height={5}/>
             <TouchableOpacity style={[tripStyles.container]} activeOpacity={0.4}
                 onPress={clickTrip} ref={boxRef}>
                 <View style={[tripStyles.textContainer, {position: 'absolute', left: 20, top: 10}]}>
@@ -399,6 +402,7 @@ function Trip({item, deleteItem, overlayProps} : {item: ItemEntity, deleteItem: 
                     </View>
                 </View>
             </TouchableOpacity>
+            <VerticalGap height={5}/>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
         </View>
     )
@@ -484,15 +488,16 @@ function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareE
     return (
         <ScrollView style={displayTripsStyles.container}>
             <View style={displayTripsStyles.internalContainer}>
-            {trips.map((item) => {
-                if (filter(item, keyPhrase, 
-                        startTime, compareStartTime, 
-                        endTime, compareEndTime,)) {
-                    return <Trip key={item.id} item={item} deleteItem={deleteItem} overlayProps={overlayProps}/>;
-                }
-                return null;
-            })}
-            <VerticalGap height={40}/>
+                <VerticalGap height={5}/>
+                {trips.map((item) => {
+                    if (filter(item, keyPhrase, 
+                            startTime, compareStartTime, 
+                            endTime, compareEndTime,)) {
+                        return <Trip key={item.id} item={item} deleteItem={deleteItem} overlayProps={overlayProps}/>;
+                    }
+                    return null;
+                })}
+                <VerticalGap height={40}/>
             </View>
         </ScrollView>
     )
