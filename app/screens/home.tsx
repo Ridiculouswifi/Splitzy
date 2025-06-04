@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 
@@ -91,10 +91,8 @@ export default function Home() {
             if (getPopProgram()) {
                 setPopProgram(false);
                 setTimeout(() => setOpenTrip(false), animationTime);
-                console.log("Press Back");
             } else {
                 setOpenTrip(false);
-                console.log("Swipe Back");
             }
         })
         return subscribe;
@@ -333,7 +331,7 @@ const tripStyles = StyleSheet.create({
         color: Colours.textColor,
     }
 })
-function Trip({item, deleteItem, overlayProps} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>, overlayProps: OverlayProps}) {
+function Trip({item, deleteItem, overlayProps, toShow} : {item: ItemEntity, deleteItem: (id: number) => void | Promise<void>, overlayProps: OverlayProps, toShow: boolean}) {
     const db = useSQLiteContext();
     const { id, trip_name, location, start_date, end_date } = item;
     const [isVisible, setIsVisible] = useState(false);
@@ -371,7 +369,11 @@ function Trip({item, deleteItem, overlayProps} : {item: ItemEntity, deleteItem: 
     }
 
     return (
-        <View>
+        <Animated.View layout={LinearTransition}
+            style={{
+                height: toShow ? 'auto' : 0,
+                overflow: 'hidden',
+            }}>
             <VerticalGap key={item.id} height={5}/>
             <TouchableOpacity style={[tripStyles.container]} activeOpacity={0.4}
                 onPress={clickTrip} ref={boxRef}>
@@ -404,7 +406,7 @@ function Trip({item, deleteItem, overlayProps} : {item: ItemEntity, deleteItem: 
             </TouchableOpacity>
             <VerticalGap height={5}/>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
-        </View>
+        </Animated.View>
     )
 }
 
@@ -435,6 +437,7 @@ function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareE
     const db = useSQLiteContext();
     const navigation = useNavigation<NativeStackNavigatorTypes>();
     const [trips, setTrips] = useState<ItemEntity[]>([]);
+    const [toShow, setToShow] = useState<boolean[]>([]);
 
     async function refetch(){
         await db.withExclusiveTransactionAsync(async () => {
@@ -476,6 +479,14 @@ function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareE
         return unsubscribe;
     }, [navigation]);
 
+    useEffect(() => {
+        let toShowCopy: boolean[] = Array(trips.length).fill(false);
+        for (let i = 0; i < trips.length; i++) {
+            toShowCopy[i] = filter(trips[i], keyPhrase, startTime, compareStartTime, endTime, compareEndTime)
+        }
+        setToShow(toShowCopy);
+    }, [trips, keyPhrase, startTime, compareStartTime, endTime, compareEndTime])
+
     async function deleteItem(id: number) {
         console.log("Deleting:", id);
         await deleteTrip(db, id);
@@ -489,13 +500,8 @@ function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareE
         <ScrollView style={displayTripsStyles.container}>
             <View style={displayTripsStyles.internalContainer}>
                 <VerticalGap height={5}/>
-                {trips.map((item) => {
-                    if (filter(item, keyPhrase, 
-                            startTime, compareStartTime, 
-                            endTime, compareEndTime,)) {
-                        return <Trip key={item.id} item={item} deleteItem={deleteItem} overlayProps={overlayProps}/>;
-                    }
-                    return null;
+                {trips.map((item, index) => {
+                    return <Trip key={item.id} item={item} deleteItem={deleteItem} overlayProps={overlayProps} toShow={toShow[index]}/>;
                 })}
                 <VerticalGap height={40}/>
             </View>
@@ -503,15 +509,15 @@ function DisplayTrips({keyPhrase, startTime, compareStartTime, endTime, compareE
     )
 }
 
-function filter(expense: ItemEntity, keyPhrase: string,
+function filter(trip: ItemEntity, keyPhrase: string,
         startTime: number, compareStartTime: boolean,
         endTime: number, compareEndTime: boolean ): boolean {
-    let matchPhrase: boolean = keyPhrase == "" || expense.trip_name.toLowerCase().includes(keyPhrase.toLowerCase()) || expense.location.toLowerCase().includes(keyPhrase.toLowerCase());
+    let matchPhrase: boolean = keyPhrase == "" || trip.trip_name.toLowerCase().includes(keyPhrase.toLowerCase()) || trip.location.toLowerCase().includes(keyPhrase.toLowerCase());
     if (compareStartTime) {
-        matchPhrase = matchPhrase && expense.start_date.getTime() >= startTime;
+        matchPhrase = matchPhrase && trip.start_date.getTime() >= startTime;
     }
     if (compareEndTime) {
-        matchPhrase = matchPhrase && expense.end_date.getTime() <= endTime;
+        matchPhrase = matchPhrase && trip.end_date.getTime() <= endTime;
     }
     return matchPhrase;
 }
