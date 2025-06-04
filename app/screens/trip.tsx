@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
-import { Dimensions, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParamsList } from "..";
 import Expenses from "./expenses";
@@ -54,11 +54,11 @@ export default function Trip() {
             <StatusBar barStyle={'light-content'}/>
             <TopSection title={tripName}/>
 
-            <View style={{position: 'relative', height: windowHeight - (0.09 * windowHeight) - insets.top - 95}}>
+            <KeyboardAvoidingView style={{position: 'relative', height: windowHeight - (0.09 * windowHeight) - insets.top - 95}}>
                 <Overview tripId={tripId} isActive={active == 1} isClose={isCloseList[0]} animationTime={animationTime}/>
                 <Transactions tripId={tripId} isActive={active == 2} isClose={isCloseList[1]} animationTime={animationTime}/>
                 <Expenses tripId={tripId} isActive={active == 3} isClose={isCloseList[2]} animationTime={animationTime}/>
-            </View>
+            </KeyboardAvoidingView>
 
             <BottomTab active={active} setActive={setActive}/>
         </View>
