@@ -103,7 +103,6 @@ export default function Expenses({tripId, isActive, isClose, animationTime}: {tr
         <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
         <KeyboardAvoidingView style={{flex: 1}}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <Animated.View style={[genericMainBodyStyles.outerContainer, expandStyle, {position: 'absolute'}]}>
             <View style={mainBodyStyles.expenseContainer}>
                 <GenericButton
                     text="New Expense" 
@@ -137,7 +136,6 @@ export default function Expenses({tripId, isActive, isClose, animationTime}: {tr
                     setCurrencies={setCurrencies}
                 />
             }/>
-            </Animated.View>
         </KeyboardAvoidingView>
         </Animated.View>
     )
@@ -461,11 +459,12 @@ function DisplayExpenses(props: DisplayExpensesProps) {
     return (
         <ScrollView style={displayExpensesStyles.container} showsVerticalScrollIndicator={false}>
             <View style={displayExpensesStyles.internalContainer}>
+                <VerticalGap height={5}/>
                 {!isLoadingExpenses && expenses.map((expense, index) => {
                     return <Expense key={expense.id} item={expense} deleteExpense={deleteItem} tripId={props.tripId} people={props.people} toShow={toShow[index]}/>;
                 }
                 )}
-                <VerticalGap height={10}/>
+                <VerticalGap height={5}/>
             </View>
         </ScrollView>
     )
@@ -566,7 +565,7 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
 
     // Parameters for collapsible animation
     const startHeight: number = 0;
-    const fillerHeight: number = 10;
+    const fillerHeight: number = 5;
     const defaultHeight: number = 130;
     const startTop: number = 100;
     const [extension, setExtension] = useState<number>(0);
@@ -671,7 +670,7 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
         <View>
             {!isLoadingText && <View>
             <Animated.View style={[fillerStyle, {overflow: 'hidden'}]}>
-                <VerticalGap key={item.id} height={10}/>
+                <VerticalGap key={item.id} height={5}/>
             </Animated.View>
             <Animated.View style={[containerStyle, {overflow: 'hidden'}]}>
             <TouchableOpacity style={[expenseStyles.container]} activeOpacity={0.65} onPress={expand}>
@@ -731,6 +730,9 @@ function Expense({item, deleteExpense, tripId, people, toShow}:
                 </Animated.View>
             </TouchableOpacity>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
+            </Animated.View>
+            <Animated.View style={[fillerStyle, {overflow: 'hidden'}]}>
+                <VerticalGap key={item.id} height={5}/>
             </Animated.View>
         </View>}
         </View>

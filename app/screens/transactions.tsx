@@ -11,7 +11,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { ParamsList } from "..";
 
 type NativeStackNavigatorTypes = NativeStackNavigationProp<ParamsList, "Transactions">;
@@ -145,6 +145,7 @@ function DisplayTransactions({tripId, isActive}: {tripId: number, isActive: bool
     return (
         <ScrollView style={displayTransactionsStyles.container} showsVerticalScrollIndicator={false}>
             <View style={displayTransactionsStyles.internalContainer}>
+                <VerticalGap height={5}/>
                 {transactions.map((transaction) => (
                     <Transaction key={transaction.id} item={transaction} deleteTransaction={deleteItem} tripId={tripId}/>
                 ))}
@@ -272,8 +273,12 @@ function Transaction({item, deleteTransaction, tripId}: {item: TransactionEntity
     }
     
     return (
-        <View>
-            <VerticalGap key={item.id} height={10}/>
+        <Animated.View layout={LinearTransition}
+            style={{
+                height: 'auto',
+                overflow: 'hidden',
+            }}>
+            <VerticalGap key={item.id} height={5}/>
             <TouchableOpacity style={transactionStyles.container} activeOpacity={0.4}>
                 <View style={transactionStyles.dateContainer}>
                     <Text style={transactionStyles.month}>{getDateMonth(item.date?.getMonth())}</Text>
@@ -294,7 +299,8 @@ function Transaction({item, deleteTransaction, tripId}: {item: TransactionEntity
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
+            <VerticalGap height={5}/>
             <ConfirmDelete isVisible={isVisible} setIsVisible={setIsVisible} confirm={confirmDelete}/>
-        </View>
+        </Animated.View>
     )
 }

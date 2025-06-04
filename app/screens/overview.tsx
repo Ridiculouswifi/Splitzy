@@ -1,13 +1,13 @@
 import { ToggleButton } from "@/components/buttons";
 import { Colours } from "@/components/colours";
-import { Divider, VerticalGap } from "@/components/gap";
+import { Divider, HorizontalGap, VerticalGap } from "@/components/gap";
 import { genericMainBodyStyles } from "@/components/screenTitle";
 import { getRelatedCurrencies, getRelatedPeople } from "@/database/databaseSqlite";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { ParamsList } from "..";
 
@@ -43,7 +43,6 @@ interface TotalTypes {
     currencyId: number,
     abbreviation: string,
     amount: number,
-    rate: number,
 }
 export default function Overview({tripId, isActive, isClose, animationTime}: {tripId: number, isActive: boolean, isClose: boolean, animationTime: number}) {
     const db = useSQLiteContext();
@@ -61,7 +60,7 @@ export default function Overview({tripId, isActive, isClose, animationTime}: {tr
     const [expenses, setExpenses] = useState<[]>([]);
     const [transactions, setTransactions] = useState<TransactionsTableTypes[]>([]);
 
-    const rates: number[] = [1, 1.2];
+    const [rates, setRates] = useState<number[]>([]);
 
     const [totalSpent, setTotalSpent] = useState<TotalTypes[]>([]);
     const [totalExpense, setTotalExpense] = useState<TotalTypes[]>([]);
@@ -123,11 +122,15 @@ export default function Overview({tripId, isActive, isClose, animationTime}: {tr
 
     useEffect(() => {
         if (!isLoading && people.length > 0 && currencies.length > 0 && expenses.length >= 0 && transactions.length >= 0) {
-            calculateValues({people, currencies, expenses, transactions, rates, setTotalSpent, setTotalExpense, setTotalBalance});
+            calculateValues({people, currencies, expenses, transactions, setTotalSpent, setTotalExpense, setTotalBalance});
             setIsDisplay(true);
             console.log(expenses.length)
         }
     }, [isLoading, expenses, people, currencies, transactions])
+
+    useEffect(() => {
+        setRates(Array(currencies.length).fill(1));
+    }, [currencies])
 
 
     return (
@@ -137,19 +140,25 @@ export default function Overview({tripId, isActive, isClose, animationTime}: {tr
             {(isDisplay) && 
             <View style={genericMainBodyStyles.container}>
                 <VerticalGap height={10}/>
-                <Statistics people={people} compilation={totalSpent} title="Total Paid"/>
+                <DisplayRates currencies={currencies} rates={rates} setRates={setRates}/>
 
                 <VerticalGap height={20}/>
                 <Divider/>
                 <VerticalGap height={20}/>
 
-                <Statistics people={people} compilation={totalExpense} title="Personal Expenses"/>
+                <Statistics people={people} compilation={totalSpent} title="Total Paid" rates={rates}/>
 
                 <VerticalGap height={20}/>
                 <Divider/>
                 <VerticalGap height={20}/>
 
-                <Statistics people={people} compilation={totalBalance} title="Balance"/>
+                <Statistics people={people} compilation={totalExpense} title="Personal Expenses" rates={rates}/>
+
+                <VerticalGap height={20}/>
+                <Divider/>
+                <VerticalGap height={20}/>
+
+                <Statistics people={people} compilation={totalBalance} title="Balance" rates={rates}/>
             </View>
             }
         </View>
@@ -163,7 +172,6 @@ interface CalculateProps {
     currencies: CurrencyTableTypes[];
     expenses: [];
     transactions: TransactionsTableTypes[];
-    rates: number[];
     setTotalSpent: (variable: TotalTypes[]) => void,
     setTotalExpense: (variable: TotalTypes[]) => void,
     setTotalBalance: (variable: TotalTypes[]) => void,
@@ -180,9 +188,9 @@ function calculateValues(props: CalculateProps) {
 
     for (let i = 0; i < peopleCount; i++) {
         for (let j = 0; j < currencyCount; j++) {
-            totalSpent.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"], "rate": props.rates[j]});
-            totalExpense.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"], "rate": props.rates[j]});
-            totalBalance.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"], "rate": props.rates[j]});
+            totalSpent.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
+            totalExpense.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
+            totalBalance.push({"personId": props.people[i]["id"], "currencyId": props.currencies[j]["id"], "amount": 0, "abbreviation": props.currencies[j]["abbreviation"]});
         }
         columnNames.push("person_" + props.people[i]["id"].toString());
     }
@@ -236,14 +244,101 @@ function calculateValues(props: CalculateProps) {
 }
 
 
+function DisplayRates({currencies, rates, setRates}: {currencies: CurrencyTableTypes[], rates: number[], setRates: (variable: number[]) => void}) {
+    function setRate(amount: number, index: number) {
+        let ratesCopy: number[] = [...rates];
+        ratesCopy[index] = amount;
+        setRates(ratesCopy);
+    }
+    
+    return (
+        <View style={statisticsStyles.container}>
+            <View style={statisticsStyles.titleContainer}>
+                <Text style={statisticsStyles.title}>Exchange Rates</Text>
+            </View>
+            <VerticalGap height={10}/>
+            <View style={displayRatesStyles.exchangeContainer}>
+                <View style={displayRatesStyles.currencyContainer}>
+                    <Text style={displayRatesStyles.amount} numberOfLines={1} ellipsizeMode="tail">{rates[0]}</Text>
+                    <HorizontalGap width={10}/>
+                    <View style={displayRatesStyles.abbreviationContainer}>
+                        <Text style={displayRatesStyles.abbreviation} numberOfLines={1} ellipsizeMode="tail">{currencies[0].abbreviation}</Text>
+                    </View>
+                </View>
+                <Text style={[displayRatesStyles.abbreviation, {fontSize: 18}]}>To</Text>
+                <View>
+                    {currencies.map((currency, index) => (
+                        <View key={currency.id}>
+                            {index != 0 && <IndivRates currency={currency} rate={rates[index]} setRate={setRate} index={index}/>}
+                            <VerticalGap height={5}/>
+                        </View>
+                    ))}
+                </View>
+            </View>
+        </View>
+    )
+}
+function IndivRates({currency, rate, setRate, index}: {currency: CurrencyTableTypes, rate: number, setRate: (amount: number, index: number) => void, index: number}) {
+    const [amount, setAmount] = useState<string>(rate.toString());
+    
+    return (
+        <View style={displayRatesStyles.currencyContainer}>
+            <TextInput style={displayRatesStyles.amount} numberOfLines={1} value={amount.toString()} keyboardType="numeric" 
+                onChangeText={(newAmount) => {
+                    const num: number = newAmount == '' ? 0 : parseFloat(newAmount);
+                    setAmount(newAmount);
+                    setRate(num, index);
+                }} />
+            <HorizontalGap width={10}/>
+            <View style={displayRatesStyles.abbreviationContainer}>
+                <Text style={displayRatesStyles.abbreviation} numberOfLines={1} ellipsizeMode="tail">{currency.abbreviation}</Text>
+            </View>
+        </View>
+    )
+}
+const displayRatesStyles = StyleSheet.create({
+    exchangeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    currencyContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    amount: {
+        color: Colours.textColor,
+        borderBottomWidth: 2,
+        borderColor: Colours.inputField,
+        width: 0.17 * windowWidth,
+        fontSize: 20,
+    },
+    abbreviationContainer: {
+        backgroundColor: Colours.backgroundV2,
+        height: 35,
+        justifyContent: 'center',
+        paddingHorizontal: 10,
+        borderRadius: 8,
+        width: 0.15 * windowWidth,
+    },
+    abbreviation: {
+        fontSize: 17,
+        fontWeight: '500',
+        color: Colours.textColor,
+    }
+})
+
+
 interface DetailsProps {
     people: PeopleTableTypes[],
     compilation: TotalTypes[],
+    rates: number[],
 }
 interface PerPersonProps {
     personId: number,
     personName: string,
     compilation: TotalTypes[],
+    rates: number[],
     isCombine: boolean,
 }
 interface ExpenseProps {
@@ -258,13 +353,16 @@ interface SplitArrayProps {
     setSplit: (variable: TotalTypes[]) => void,
     setCombine: (variable: TotalTypes[]) => void,
 }
+// Function to isolate the specific calculations for a specified person/ user.
+// Also combines the values into all SGD for easier reading.
 function splitArray(props: PerPersonProps & SplitArrayProps) {
     let splitResult: TotalTypes[] = [];
-    let combineResult: TotalTypes[] = [{"personId": props.personId, "currencyId": props.compilation[0]["currencyId"], "amount": 0, "abbreviation": props.compilation[0]["abbreviation"], "rate": props.compilation[0]["rate"]}];
+    let combineResult: TotalTypes[] = [{"personId": props.personId, "currencyId": props.compilation[0]["currencyId"], "amount": 0, "abbreviation": props.compilation[0]["abbreviation"]}];
+    let numCurrencies: number = props.rates.length;
     for (let i = 0; i < props.compilation.length; i++) {
         if (props.compilation[i]["personId"] == props.personId) {
             splitResult.push(props.compilation[i]);
-            combineResult[0]["amount"] += props.compilation[i].amount / props.compilation[i].rate;
+            combineResult[0]["amount"] += props.compilation[i].amount / props.rates[i % numCurrencies];
         }
     }
     props.setSplit(splitResult);
@@ -314,7 +412,8 @@ function Statistics(props: DetailsProps & TitleProps) {
                     personId={person.id}
                     personName={person.name}
                     compilation={props.compilation}
-                    isCombine={isCombine}/>
+                    isCombine={isCombine}
+                    rates={props.rates}/>
             ))}
         </View>
     )
@@ -347,7 +446,7 @@ function StatisticsIndiv(props: PerPersonProps) {
 
     useEffect(() => {
         splitArray({...props, setSplit: setContributions, setCombine: setCombineContributions}) // ... is used to spread out the props
-    }, [])
+    }, [props.rates])
 
     return (
         <View>
